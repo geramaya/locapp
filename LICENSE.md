@@ -2,7 +2,7 @@
 
 __LocApp__ is licensed under the MIT License.
 
-Original work Copyright (c) 2017-2018 Aspera GmbH
+Original work Copyright (c) 2017-2018 Aspera GmbH  
 Modified work Copyright (c) 2019 Daniel Weiss (geramaya@gmail.com)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
