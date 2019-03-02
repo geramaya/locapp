@@ -128,7 +128,7 @@ public class ExcelExportCommand implements CommandRunnable {
 
         HSSFWorkbook wb = new HSSFWorkbook();
         initStyles(wb);
-        Sheet sheet = wb.createSheet("SLC Properties");
+        Sheet sheet = wb.createSheet("LocApp Properties");
         List<Sheet> sheets = new ArrayList<>();
         sheets.add(sheet);
         List<String> knownLanguages = locFacade.getLanguages(false);

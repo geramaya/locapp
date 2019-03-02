@@ -94,7 +94,7 @@ public class ExportPropertiesCommand implements CommandRunnable {
                     }
                     OutputStream outStream = FileUtils.openOutputStream(exportPropertyFile);
                     if (prop.size() >= 1) {
-                        prop.store(outStream, "SLC property file " + locFilename != null ? locFilename : "");
+                        prop.store(outStream, "LocApp property file " + locFilename != null ? locFilename : "");
                     } else {
                         outStream.close();
                         FileUtils.forceDelete(exportPropertyFile);

@@ -66,7 +66,7 @@ public class ExportDeltaCommand implements CommandRunnable {
 
         exportPath += SystemUtils.IS_OS_WINDOWS ? "\\" : "/";
 
-        sheetNames.add("SLC Properties Delta");
+        sheetNames.add("LocApp Properties Delta");
 
         headers = createHeaders(getLanguages());
         excelHandler.createSheets(sheetNames);
