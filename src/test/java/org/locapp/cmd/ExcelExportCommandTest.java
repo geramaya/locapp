@@ -10,7 +10,7 @@ import org.locapp.dao.BasicFacadeTest;
 public class ExcelExportCommandTest extends BasicFacadeTest {
 
     @Before
-    public void init() throws InstantiationException, IllegalAccessException {
+    public void init() throws InstantiationException, IllegalAccessException, CommandException {
 
         String testfiles = ExcelExportCommandTest.class.getClassLoader().getResource("testfiles").getFile();
 
@@ -31,7 +31,7 @@ public class ExcelExportCommandTest extends BasicFacadeTest {
     private static final String TEMP_DIR = FileUtils.getTempDirectoryPath();
 
     @Test
-    public void exportExcelFile() throws InstantiationException, IllegalAccessException, IOException {
+    public void exportExcelFile() throws InstantiationException, IllegalAccessException, IOException, CommandException {
         CMDCTX.addArgument("ee");
         CMDCTX.addArgument(TEMP_DIR);
         CMDCTX.addArgument("fr");

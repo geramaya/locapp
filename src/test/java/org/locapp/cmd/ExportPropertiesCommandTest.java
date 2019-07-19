@@ -11,7 +11,7 @@ public class ExportPropertiesCommandTest extends BasicFacadeTest {
     private static final String TEMP_DIR = FileUtils.getTempDirectoryPath();
 
     @Test
-    public void importExcelFile() throws InstantiationException, IllegalAccessException, IOException {
+    public void importExcelFile() throws InstantiationException, IllegalAccessException, IOException, CommandException {
         CMDCTX.addArgument("cl");
         CMDCTX.executeCommand(CMDCTX.nextArgument());
 

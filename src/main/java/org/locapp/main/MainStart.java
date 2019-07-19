@@ -17,6 +17,7 @@ import javax.imageio.ImageIO;
 
 import org.h2.tools.Server;
 import org.locapp.cmd.CommandContext;
+import org.locapp.cmd.CommandException;
 import org.locapp.dao.H2DatabaseManager;
 import org.locapp.util.Resources;
 
@@ -75,7 +76,7 @@ public class MainStart {
         if (CommandContext.getInstance().isCommand(cmd)) {
             try {
                 CommandContext.getInstance().executeCommand(cmd);
-            } catch (InstantiationException | IllegalAccessException e) {
+            } catch (InstantiationException | IllegalAccessException | CommandException e) {
                 logger.log(Level.SEVERE, e.getMessage(), e);
             }
         } else {

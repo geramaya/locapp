@@ -10,7 +10,7 @@ import org.locapp.dao.DatabaseException;
 public class MergeCommandTest extends BasicFacadeTest {
 
     @Before
-    public void init() throws InstantiationException, IllegalAccessException {
+    public void init() throws InstantiationException, IllegalAccessException, CommandException {
 
         CMDCTX.addArgument("init");
         CMDCTX.executeCommand(CMDCTX.nextArgument());
@@ -29,7 +29,7 @@ public class MergeCommandTest extends BasicFacadeTest {
 
     @Test
     public void countSRCPropertiesFiles()
-            throws InstantiationException, IllegalAccessException, IOException, DatabaseException {
+            throws InstantiationException, IllegalAccessException, IOException, DatabaseException, CommandException {
         CMDCTX.addArgument("mp");
         CMDCTX.addArgument("xls");
         CMDCTX.executeCommand(CMDCTX.nextArgument());
