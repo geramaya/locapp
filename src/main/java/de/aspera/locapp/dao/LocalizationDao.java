@@ -29,17 +29,17 @@ import de.aspera.locapp.util.ValidationHelper;
  *
  * @author daniel
  */
-public class LocalizationFacade extends AbstractFacade<Localization> {
+public class LocalizationDao extends AbstractDao<Localization> {
 
-    private static final Logger logger = Logger.getLogger(LocalizationFacade.class.getName());
+    private static final Logger logger = Logger.getLogger(LocalizationDao.class.getName());
 
     private static final String EMPTY_PROPERTIES_HQL = " AND (target.value is null OR target.value = '') ";
     private static final String NOT_EMPTY_PROPERTIES_HQL = " AND target.value != '' ";
 
-    private IgnoredItemFacade ignoredItemFacade = new IgnoredItemFacade();
+    private IgnoredItemDao ignoredItemDao = new IgnoredItemDao();
     private boolean fileIgnoring;
 
-    public LocalizationFacade() {
+    public LocalizationDao() {
         this(true);
     }
 
@@ -48,7 +48,7 @@ public class LocalizationFacade extends AbstractFacade<Localization> {
      * 
      * @param fileIgnoring
      */
-    public LocalizationFacade(boolean fileIgnoring) {
+    public LocalizationDao(boolean fileIgnoring) {
         super(Localization.class);
         this.fileIgnoring = fileIgnoring;
     }
@@ -247,7 +247,7 @@ public class LocalizationFacade extends AbstractFacade<Localization> {
     }
 
     private <TEntry> Stream<TEntry> streamIgnoredEntries(Collection<TEntry> entries, Function<TEntry, String> getFullPath) {
-        Set<String> ignoredFiles = ignoredItemFacade.listIgnoredFiles();
+        Set<String> ignoredFiles = ignoredItemDao.listIgnoredFiles();
 
         return entries.stream()
             .filter(entry -> !HelperUtil.isIgnoredFile(ignoredFiles, getFullPath.apply(entry)));

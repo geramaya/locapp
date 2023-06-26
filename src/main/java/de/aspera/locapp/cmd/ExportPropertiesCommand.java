@@ -19,7 +19,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import de.aspera.locapp.dao.DatabaseException;
-import de.aspera.locapp.dao.LocalizationFacade;
+import de.aspera.locapp.dao.LocalizationDao;
 import de.aspera.locapp.dto.Localization;
 import de.aspera.locapp.dto.Localization.Status;
 import de.aspera.locapp.util.HelperUtil;
@@ -33,7 +33,7 @@ import de.aspera.locapp.util.HelperUtil;
 public class ExportPropertiesCommand implements CommandRunnable {
 
 	private static final Logger logger = Logger.getLogger(ExportPropertiesCommand.class.getName());
-	private LocalizationFacade locFacade = new LocalizationFacade();
+	private LocalizationDao locFacade = new LocalizationDao();
 	private List<Localization> allLocalizations;
 
 	@Override

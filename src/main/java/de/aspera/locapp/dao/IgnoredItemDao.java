@@ -5,8 +5,8 @@ import java.util.stream.Collectors;
 
 import de.aspera.locapp.dto.IgnoredItem;
 
-public class IgnoredItemFacade extends AbstractFacade<IgnoredItem> {
-    public IgnoredItemFacade() {
+public class IgnoredItemDao extends AbstractDao<IgnoredItem> {
+    public IgnoredItemDao() {
         super(IgnoredItem.class);
     }
 

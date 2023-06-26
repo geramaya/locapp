@@ -15,13 +15,13 @@ import de.aspera.locapp.util.ValidationHelper;
  * @author daniel
  * @param <T>
  */
-abstract class AbstractFacade<T> {
+abstract class AbstractDao<T> {
 
     private final Class<T> entityClass;
     private static Logger logger;
     protected final H2DatabaseManager instance = H2DatabaseManager.getInstance();
 
-    protected AbstractFacade(Class<T> entityClass) {
+    protected AbstractDao(Class<T> entityClass) {
         this.entityClass = entityClass;
     }
 
@@ -50,7 +50,7 @@ abstract class AbstractFacade<T> {
             ValidationHelper.validateBean(entity);
             return getEntityManager().merge(entity);
         } catch (Exception ex) {
-            Logger.getLogger(AbstractFacade.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
+            Logger.getLogger(AbstractDao.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
             if (getEntityManager().getTransaction().isActive()) {
                 getEntityManager().getTransaction().setRollbackOnly();
             }
@@ -66,7 +66,7 @@ abstract class AbstractFacade<T> {
             if (getEntityManager().getTransaction().isActive()) {
                 getEntityManager().getTransaction().setRollbackOnly();
             }
-            Logger.getLogger(AbstractFacade.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
+            Logger.getLogger(AbstractDao.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
             throw new DatabaseException(ex.getMessage(), ex);
         }
     }

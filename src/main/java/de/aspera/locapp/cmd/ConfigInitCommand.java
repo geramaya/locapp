@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import de.aspera.locapp.dao.ConfigFacade;
+import de.aspera.locapp.dao.ConfigDao;
 import de.aspera.locapp.dao.DatabaseException;
 import de.aspera.locapp.dto.Config;
 
@@ -25,7 +25,7 @@ public class ConfigInitCommand implements CommandRunnable {
     private void init() {
         try {
             List<Config> configs = new ArrayList<>();
-            ConfigFacade configFacade = new ConfigFacade();
+            ConfigDao configFacade = new ConfigDao();
             Config config = new Config();
 
             config.setKey(EXCLUDED_KEY);

@@ -20,7 +20,7 @@ public class DatabaseFacadeTest extends BasicFacadeTest {
         loc.setFileName("foo.properties");
         loc.setFullPath("d:\\foo.properties");
         loc.setVersion(1);
-        new LocalizationFacade().create(loc);
+        new LocalizationDao().create(loc);
     }
 
     @Test
@@ -28,8 +28,8 @@ public class DatabaseFacadeTest extends BasicFacadeTest {
         FileInfo loc = new FileInfo();
         loc.setFileName("foo.properties");
         loc.setFullPath("d:\\foo.properties");
-        new FileInfoFacade().create(loc);
-        new FileInfoFacade().removeAll();
+        new FileInfoDao().create(loc);
+        new FileInfoDao().removeAll();
     }
 
     @Test
@@ -38,7 +38,7 @@ public class DatabaseFacadeTest extends BasicFacadeTest {
         config.setKey("aKey");
         String[] valueArray = new String[] { "a", "b", "c" };
         config.setValue(valueArray);
-        ConfigFacade configFacade = new ConfigFacade();
+        ConfigDao configFacade = new ConfigDao();
         configFacade.create(config);
 
         // get it back

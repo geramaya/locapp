@@ -9,9 +9,9 @@ import java.util.logging.Logger;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 
-import de.aspera.locapp.dao.ConfigFacade;
+import de.aspera.locapp.dao.ConfigDao;
 import de.aspera.locapp.dao.DatabaseException;
-import de.aspera.locapp.dao.FileInfoFacade;
+import de.aspera.locapp.dao.FileInfoDao;
 import de.aspera.locapp.dto.FileInfo;
 
 public class FilesCommand implements CommandRunnable {
@@ -30,7 +30,7 @@ public class FilesCommand implements CommandRunnable {
         }
 
         long start = System.currentTimeMillis();
-        ConfigFacade configFacade = new ConfigFacade();
+        ConfigDao configFacade = new ConfigDao();
         
         String[] excludedPaths = new String[] { "" };
         try {
@@ -42,7 +42,7 @@ public class FilesCommand implements CommandRunnable {
         PropertyFileReader propertyFileReader = new PropertyFileReader(path + (SystemUtils.IS_OS_WINDOWS ? "\\" : "/"),
                 ".properties", excludedPaths);
 
-        FileInfoFacade fileFacade = new FileInfoFacade();
+        FileInfoDao fileFacade = new FileInfoDao();
         List<FileInfo> files = new ArrayList<>();
         try {
             fileFacade.removeAll();

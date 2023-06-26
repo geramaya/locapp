@@ -15,7 +15,7 @@ import java.util.logging.Logger;
 import org.apache.commons.lang3.SystemUtils;
 
 import de.aspera.locapp.dao.DatabaseException;
-import de.aspera.locapp.dao.LocalizationFacade;
+import de.aspera.locapp.dao.LocalizationDao;
 import de.aspera.locapp.dto.Localization;
 import de.aspera.locapp.dto.Localization.Status;
 import de.aspera.locapp.util.ExcelHandler;
@@ -26,7 +26,7 @@ public class ExportDeltaCommand implements CommandRunnable {
     private static final Logger LOGGER        = Logger.getLogger(ExportDeltaCommand.class.getName());
 
     private List<Localization>  locaDeltaList = new ArrayList<>();
-    private LocalizationFacade  locaFacade    = new LocalizationFacade();
+    private LocalizationDao  locaFacade    = new LocalizationDao();
     private ExcelHandler        excelHandler  = new ExcelHandler();
     private List<String>        languages;
 

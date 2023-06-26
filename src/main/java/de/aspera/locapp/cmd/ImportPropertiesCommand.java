@@ -14,8 +14,8 @@ import java.util.logging.Logger;
 import org.apache.commons.io.FileUtils;
 
 import de.aspera.locapp.dao.DatabaseException;
-import de.aspera.locapp.dao.FileInfoFacade;
-import de.aspera.locapp.dao.LocalizationFacade;
+import de.aspera.locapp.dao.FileInfoDao;
+import de.aspera.locapp.dao.LocalizationDao;
 import de.aspera.locapp.dto.FileInfo;
 import de.aspera.locapp.dto.Localization;
 import de.aspera.locapp.dto.Localization.Status;
@@ -43,7 +43,7 @@ public class ImportPropertiesCommand implements CommandRunnable {
 		InputStream inStream = null;
 
 		try {
-			FileInfoFacade fileFacade = new FileInfoFacade();
+			FileInfoDao fileFacade = new FileInfoDao();
 			List<FileInfo> files = fileFacade.findAll();
 
 			if (files == null || files.size() == 0) {
@@ -51,7 +51,7 @@ public class ImportPropertiesCommand implements CommandRunnable {
 				return;
 			}
 
-			LocalizationFacade locFacade = new LocalizationFacade();
+			LocalizationDao locFacade = new LocalizationDao();
 			// increase the version of a loc data row
 			int lastVersion = locFacade.lastVersion(Status.SRC) + 1;
 			for (FileInfo myfile : files) {

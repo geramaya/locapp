@@ -22,14 +22,14 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 
 import de.aspera.locapp.dao.DatabaseException;
-import de.aspera.locapp.dao.LocalizationFacade;
+import de.aspera.locapp.dao.LocalizationDao;
 import de.aspera.locapp.dto.Localization;
 import de.aspera.locapp.dto.Localization.Status;
 
 public class ExcelImportCommand implements CommandRunnable {
     private static final int COL_KEY = 1;
     private static final Logger logger = Logger.getLogger(ExcelExportCommand.class.getName());
-    private LocalizationFacade locFacade = new LocalizationFacade();
+    private LocalizationDao locFacade = new LocalizationDao();
     private Map<String, Integer> languagePositonMap = new HashMap<>();
 
     @Override

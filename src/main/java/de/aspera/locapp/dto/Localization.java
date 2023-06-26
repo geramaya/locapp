@@ -55,7 +55,7 @@ public class Localization implements Serializable {
         this.id = id;
     }
 
-    @Column(name = "KEY")
+    @Column(name = "PROPERTY_KEY")
     public String getKey() {
         return key;
     }

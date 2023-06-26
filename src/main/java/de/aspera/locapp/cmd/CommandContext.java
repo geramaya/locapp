@@ -102,5 +102,11 @@ public class CommandContext {
         addCommand("clear-ignore-list", ClearIgnoreListCommand.class);
         addCommand("sdl", SetDefaultLanguageCommand.class);
         addCommand("set-default-language", SetDefaultLanguageCommand.class);
+        addCommand("csv-export", CSVExportCommand.class);
+        addCommand("csvex", CSVExportCommand.class);
+        addCommand("csv-import", CSVImportCommand.class);
+        addCommand("csvin", CSVImportCommand.class);
+        
+        
     }
 }

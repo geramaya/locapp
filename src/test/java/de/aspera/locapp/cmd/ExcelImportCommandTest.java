@@ -7,7 +7,7 @@ import org.junit.Test;
 
 import de.aspera.locapp.dao.BasicFacadeTest;
 import de.aspera.locapp.dao.DatabaseException;
-import de.aspera.locapp.dao.LocalizationFacade;
+import de.aspera.locapp.dao.LocalizationDao;
 import de.aspera.locapp.dto.Localization.Status;
 
 public class ExcelImportCommandTest extends BasicFacadeTest {
@@ -25,7 +25,7 @@ public class ExcelImportCommandTest extends BasicFacadeTest {
         CMDCTX.addArgument("pc");
         CMDCTX.addArgument("xls");
         CMDCTX.executeCommand(CMDCTX.nextArgument());
-        long countSRC = new LocalizationFacade().countOfProperties(Status.XLS, null, false);
+        long countSRC = new LocalizationDao().countOfProperties(Status.XLS, null, false);
         Assert.assertNotNull(countSRC);
         Assert.assertEquals(countSRC, 8);
 

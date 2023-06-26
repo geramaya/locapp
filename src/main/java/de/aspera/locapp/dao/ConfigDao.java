@@ -15,14 +15,14 @@ import de.aspera.locapp.util.ValidationHelper;
  * @author Bjoern.Buchholz
  *
  */
-public class ConfigFacade extends AbstractFacade<Config> {
+public class ConfigDao extends AbstractDao<Config> {
 
-	private static final Logger LOGGER = Logger.getLogger(ConfigFacade.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(ConfigDao.class.getName());
 
 	protected static String DEFAULT_LANGUAGE_KEY = "defaultLanguage";
 	public static String DEFAULT_LANGUAGE = Locale.ENGLISH.getLanguage();
 
-	public ConfigFacade() {
+	public ConfigDao() {
 		super(Config.class);
 	}
 

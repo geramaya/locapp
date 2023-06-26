@@ -11,7 +11,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.NumberUtils;
 
 import de.aspera.locapp.dao.DatabaseException;
-import de.aspera.locapp.dao.LocalizationFacade;
+import de.aspera.locapp.dao.LocalizationDao;
 import de.aspera.locapp.dto.Localization;
 import de.aspera.locapp.dto.Localization.Status;
 
@@ -25,7 +25,7 @@ import de.aspera.locapp.dto.Localization.Status;
 public class MergeCommand implements CommandRunnable {
 
     private static final Logger logger = Logger.getLogger(MergeCommand.class.getName());
-    private LocalizationFacade locFacade = new LocalizationFacade();
+    private LocalizationDao locFacade = new LocalizationDao();
     private Map<String, Localization> propertiesMap = new HashMap<>();
 
     @Override

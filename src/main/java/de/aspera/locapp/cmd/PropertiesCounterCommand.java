@@ -7,13 +7,13 @@ import java.util.logging.Logger;
 import org.apache.commons.lang.StringUtils;
 
 import de.aspera.locapp.dao.DatabaseException;
-import de.aspera.locapp.dao.LocalizationFacade;
+import de.aspera.locapp.dao.LocalizationDao;
 import de.aspera.locapp.dto.Localization.Status;
 
 public class PropertiesCounterCommand implements CommandRunnable {
 
     private static final Logger logger = Logger.getLogger(PropertiesCounterCommand.class.getName());
-    private LocalizationFacade locFacade = new LocalizationFacade();
+    private LocalizationDao locFacade = new LocalizationDao();
 
     @Override
     public void run() {
