@@ -5,6 +5,7 @@
  */
 package de.aspera.locapp.dao;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -20,6 +21,8 @@ import javax.persistence.Query;
 
 import org.apache.commons.lang3.StringUtils;
 
+import de.aspera.locapp.cmd.CommandException;
+import de.aspera.locapp.cmd.FailedLocalization;
 import de.aspera.locapp.dto.Localization;
 import de.aspera.locapp.dto.Localization.Status;
 import de.aspera.locapp.util.HelperUtil;
@@ -31,281 +34,304 @@ import de.aspera.locapp.util.ValidationHelper;
  */
 public class LocalizationDao extends AbstractDao<Localization> {
 
-    private static final Logger logger = Logger.getLogger(LocalizationDao.class.getName());
+	private static final Logger logger = Logger.getLogger(LocalizationDao.class.getName());
 
-    private static final String EMPTY_PROPERTIES_HQL = " AND (target.value is null OR target.value = '') ";
-    private static final String NOT_EMPTY_PROPERTIES_HQL = " AND target.value != '' ";
+	private static final String EMPTY_PROPERTIES_HQL = " AND (target.value is null OR target.value = '') ";
+	private static final String NOT_EMPTY_PROPERTIES_HQL = " AND target.value != '' ";
 
-    private IgnoredItemDao ignoredItemDao = new IgnoredItemDao();
-    private boolean fileIgnoring;
+	private IgnoredItemDao ignoredItemDao = new IgnoredItemDao();
+	private boolean fileIgnoring;
 
-    public LocalizationDao() {
-        this(true);
-    }
+	public LocalizationDao() {
+		this(true);
+	}
 
-    /**
-     * If file ignoring is set, then all of the files (and their entries) that are present on 'blacklist', are ignored.
-     * 
-     * @param fileIgnoring
-     */
-    public LocalizationDao(boolean fileIgnoring) {
-        super(Localization.class);
-        this.fileIgnoring = fileIgnoring;
-    }
+	/**
+	 * If file ignoring is set, then all of the files (and their entries) that are
+	 * present on 'blacklist', are ignored.
+	 * 
+	 * @param fileIgnoring
+	 */
+	public LocalizationDao(boolean fileIgnoring) {
+		super(Localization.class);
+		this.fileIgnoring = fileIgnoring;
+	}
 
-    /**
-     * The method returns the last version by a localization status. The
-     * parameter status can be null and returns the latest version without a
-     * status process milestone.
-     *
-     * @param status
-     * @return
-     * @throws DatabaseException
-     */
-    public int lastVersion(Status status) throws DatabaseException {
-        try {
-            getEntityManager().getTransaction().begin();
-            final String queryStr;
-            if (status == null) {
-                queryStr = "select distinct max(target.version) from " + Localization.class.getSimpleName() + " target";
-            } else {
-                queryStr = "select distinct max(target.version) from " + Localization.class.getSimpleName()
-                        + " target where target.status = :status";
-            }
-            Query query = getEntityManager().createQuery(queryStr);
-            if (status != null) {
-                query.setParameter("status", status);
-            }
-            Integer lastVersion = (Integer) query.getSingleResult();
-            getEntityManager().getTransaction().commit();
-            return lastVersion == null ? 0 : lastVersion;
-        } catch (Exception e) {
-            throw new DatabaseException(e.getMessage(), e);
-        }
+	/**
+	 * The method returns the last version by a localization status. The parameter
+	 * status can be null and returns the latest version without a status process
+	 * milestone.
+	 *
+	 * @param status
+	 * @return
+	 * @throws DatabaseException
+	 */
+	public int lastVersion(Status status) throws DatabaseException {
+		try {
+			getEntityManager().getTransaction().begin();
+			final String queryStr;
+			if (status == null) {
+				queryStr = "select distinct max(target.version) from " + Localization.class.getSimpleName() + " target";
+			} else {
+				queryStr = "select distinct max(target.version) from " + Localization.class.getSimpleName()
+						+ " target where target.status = :status";
+			}
+			Query query = getEntityManager().createQuery(queryStr);
+			if (status != null) {
+				query.setParameter("status", status);
+			}
+			Integer lastVersion = (Integer) query.getSingleResult();
+			getEntityManager().getTransaction().commit();
+			return lastVersion == null ? 0 : lastVersion;
+		} catch (Exception e) {
+			throw new DatabaseException(e.getMessage(), e);
+		}
 
-    }
+	}
 
-    public List<String> getLanguages(boolean exportProperties) throws DatabaseException {
-        try {
-            String queryStr = "select distinct target.locale, target.fullPath from " + Localization.class.getSimpleName() + " target ";
-            if (exportProperties) {
-            	queryStr += " where target.status = :status AND target.version = :version";
-            }
-            Query query = getEntityManager().createQuery(queryStr);
-            if (exportProperties) {
-            	query.setParameter("version", lastVersion(Status.XLS));
-            	query.setParameter("status", Status.XLS);
-            }
+	public List<String> getLanguages(boolean exportProperties) throws DatabaseException {
+		try {
+			String queryStr = "select distinct target.locale, target.fullPath from "
+					+ Localization.class.getSimpleName() + " target ";
+			if (exportProperties) {
+				queryStr += " where target.status = :status AND target.version = :version";
+			}
+			Query query = getEntityManager().createQuery(queryStr);
+			if (exportProperties) {
+				query.setParameter("version", lastVersion(Status.XLS));
+				query.setParameter("status", Status.XLS);
+			}
 
-            @SuppressWarnings("unchecked")
-            var languages = (List<Object[]>)query.getResultList();
+			@SuppressWarnings("unchecked")
+			var languages = (List<Object[]>) query.getResultList();
 
-            var procLanguages = fileIgnoring
-                ? filterIgnoredEntries(languages, row -> (String)(row[1]))
-                : languages;
+			var procLanguages = fileIgnoring ? filterIgnoredEntries(languages, row -> (String) (row[1])) : languages;
 
-            return procLanguages.stream()
-                .map(row -> (String)(row[0]))
-                .distinct()
-                .collect(Collectors.toList());
-        } catch (Exception e) {
-            throw new DatabaseException(e.getMessage(), e);
-        }
-    }
+			return procLanguages.stream().map(row -> (String) (row[0])).distinct().collect(Collectors.toList());
+		} catch (Exception e) {
+			throw new DatabaseException(e.getMessage(), e);
+		}
+	}
 
-    public List<Localization> getLocalizations(int lastVersion, Status status, boolean emptyProperties, String fullPath)
-            throws DatabaseException {
-        try {
-            StringBuilder queryStr = new StringBuilder();
-            String fullPathQuery = " AND target.fullPath = :fullPath ";
+	public List<Localization> getLocalizations(int lastVersion, Status status, boolean emptyProperties, String fullPath)
+			throws DatabaseException {
+		try {
+			StringBuilder queryStr = new StringBuilder();
+			String fullPathQuery = " AND target.fullPath = :fullPath ";
 
-            queryStr.append("select target from " + Localization.class.getSimpleName()
-                    + " target where target.version = :version" + " AND target.status = :status");
-            if (StringUtils.isNotEmpty(fullPath))
-                queryStr.append(fullPathQuery);
-            if (emptyProperties)
-                queryStr.append(EMPTY_PROPERTIES_HQL);
-            queryStr.append(" order by target.key, target.locale asc ");
+			queryStr.append("select target from " + Localization.class.getSimpleName()
+					+ " target where target.version = :version" + " AND target.status = :status");
+			if (StringUtils.isNotEmpty(fullPath))
+				queryStr.append(fullPathQuery);
+			if (emptyProperties)
+				queryStr.append(EMPTY_PROPERTIES_HQL);
+			queryStr.append(" order by target.key, target.locale asc ");
 
-            Query query = getEntityManager().createQuery(queryStr.toString());
-            query.setParameter("version", lastVersion);
-            query.setParameter("status", status);
-            if (StringUtils.isNotEmpty(fullPath))
-                query.setParameter("fullPath", fullPath);
-            @SuppressWarnings("unchecked")
-            List<Localization> locs = (List<Localization>) query.getResultList();
+			Query query = getEntityManager().createQuery(queryStr.toString());
+			query.setParameter("version", lastVersion);
+			query.setParameter("status", status);
+			if (StringUtils.isNotEmpty(fullPath))
+				query.setParameter("fullPath", fullPath);
+			@SuppressWarnings("unchecked")
+			List<Localization> locs = (List<Localization>) query.getResultList();
 
-            return fileIgnoring
-                ? filterIgnoredEntries(locs, loc -> loc.getFileName())
-                : locs;
-        } catch (Exception e) {
-            throw new DatabaseException(e.getMessage(), e);
-        }
-    }
+			return fileIgnoring ? filterIgnoredEntries(locs, loc -> loc.getFileName()) : locs;
+		} catch (Exception e) {
+			throw new DatabaseException(e.getMessage(), e);
+		}
+	}
 
-    public List<Localization> getLocalizationForIntegrityCheck(int lastVersion, Status status, Locale locale, boolean emptyProperties,
-            String fullPath) throws DatabaseException {
-        try {
-            StringBuilder queryStr = new StringBuilder();
-            String fullPathQuery = " AND target.fullPath = :fullPath ";
-            String languageQuery = " AND target.locale = :locale ";
+	public List<Localization> getLocalizationForIntegrityCheck(int lastVersion, Status status, Locale locale,
+			boolean emptyProperties, String fullPath) throws DatabaseException {
+		try {
+			StringBuilder queryStr = new StringBuilder();
+			String fullPathQuery = " AND target.fullPath = :fullPath ";
+			String languageQuery = " AND target.locale = :locale ";
 
-            queryStr.append("select target from " + Localization.class.getSimpleName()
-                    + " target where target.version = :version" + " AND target.status = :status");
-            if (StringUtils.isNotEmpty(fullPath))
-                queryStr.append(fullPathQuery);
+			queryStr.append("select target from " + Localization.class.getSimpleName()
+					+ " target where target.version = :version" + " AND target.status = :status");
+			if (StringUtils.isNotEmpty(fullPath))
+				queryStr.append(fullPathQuery);
 
-            if (locale != null)
-                queryStr.append(languageQuery);
+			if (locale != null)
+				queryStr.append(languageQuery);
 
-            if (!emptyProperties) {
-                queryStr.append(NOT_EMPTY_PROPERTIES_HQL);
-            }
-            queryStr.append(" order by target.key, target.locale asc ");
+			if (!emptyProperties) {
+				queryStr.append(NOT_EMPTY_PROPERTIES_HQL);
+			}
+			queryStr.append(" order by target.key, target.locale asc ");
 
-            Query query = getEntityManager().createQuery(queryStr.toString());
-            query.setParameter("version", lastVersion);
-            query.setParameter("status", status);
-            if (StringUtils.isNotEmpty(fullPath))
-                query.setParameter("fullPath", fullPath);
-            if (locale != null)
-                query.setParameter("locale", locale.getLanguage().toLowerCase());
+			Query query = getEntityManager().createQuery(queryStr.toString());
+			query.setParameter("version", lastVersion);
+			query.setParameter("status", status);
+			if (StringUtils.isNotEmpty(fullPath))
+				query.setParameter("fullPath", fullPath);
+			if (locale != null)
+				query.setParameter("locale", locale.getLanguage().toLowerCase());
 
-            @SuppressWarnings("unchecked")
-            List<Localization> locs = (List<Localization>) query.getResultList();
-            
-            return fileIgnoring
-                ? filterIgnoredEntries(locs, loc -> loc.getFileName())
-                : locs;
-        } catch (Exception e) {
-            throw new DatabaseException(e.getMessage(), e);
-        }
-    }
+			@SuppressWarnings("unchecked")
+			List<Localization> locs = (List<Localization>) query.getResultList();
 
-    public List<Localization> getLocalizationsWithLastVersion(int lastVersion) throws DatabaseException {
-        try {
-            getEntityManager().getTransaction().begin();
-            String queryStr = "select target from " + Localization.class.getSimpleName()
-                    + " target where target.version = :version" + " order by target.key asc";
-            Query query = getEntityManager().createQuery(queryStr);
-            query.setParameter("version", lastVersion);
-            @SuppressWarnings("unchecked")
-            List<Localization> locs = (List<Localization>) query.getResultList();
-            getEntityManager().getTransaction().commit();
-            
-            return fileIgnoring
-                ? filterIgnoredEntries(locs, loc -> loc.getFileName())
-                : locs;
-        } catch (Exception e) {
-            throw new DatabaseException(e.getMessage(), e);
-        }
+			return fileIgnoring ? filterIgnoredEntries(locs, loc -> loc.getFileName()) : locs;
+		} catch (Exception e) {
+			throw new DatabaseException(e.getMessage(), e);
+		}
+	}
 
-    }
+	public List<Localization> getLocalizationsWithLastVersion(int lastVersion) throws DatabaseException {
+		try {
+			getEntityManager().getTransaction().begin();
+			String queryStr = "select target from " + Localization.class.getSimpleName()
+					+ " target where target.version = :version" + " order by target.key asc";
+			Query query = getEntityManager().createQuery(queryStr);
+			query.setParameter("version", lastVersion);
+			@SuppressWarnings("unchecked")
+			List<Localization> locs = (List<Localization>) query.getResultList();
+			getEntityManager().getTransaction().commit();
 
-    public Set<String> getFiles(Locale locale, boolean exportProperties) throws DatabaseException {
-        try {
-            String queryStr = "select distinct target.fullPath from " + Localization.class.getSimpleName()
-                    + " target where target.fullPath LIKE :fullPath ";
-            if (exportProperties) {
-            	queryStr += "AND target.status = :status AND target.version = :version";
-            }
-            Query query = getEntityManager().createQuery(queryStr);
-            query.setParameter("fullPath", "%.properties");
-            if (exportProperties) {
-            	query.setParameter("version", lastVersion(Status.XLS));
-            	query.setParameter("status", Status.XLS);
-            }
-            	
-            @SuppressWarnings("unchecked")
+			return fileIgnoring ? filterIgnoredEntries(locs, loc -> loc.getFileName()) : locs;
+		} catch (Exception e) {
+			throw new DatabaseException(e.getMessage(), e);
+		}
+
+	}
+
+	public Set<String> getFiles(Locale locale, boolean exportProperties) throws DatabaseException {
+		try {
+			String queryStr = "select distinct target.fullPath from " + Localization.class.getSimpleName()
+					+ " target where target.fullPath LIKE :fullPath ";
+			if (exportProperties) {
+				queryStr += "AND target.status = :status AND target.version = :version";
+			}
+			Query query = getEntityManager().createQuery(queryStr);
+			query.setParameter("fullPath", "%.properties");
+			if (exportProperties) {
+				query.setParameter("version", lastVersion(Status.XLS));
+				query.setParameter("status", Status.XLS);
+			}
+
+			@SuppressWarnings("unchecked")
 			List<String> fullPaths = (List<String>) query.getResultList();
-            Set<String> paths = new HashSet<>();
-            for (String path : fullPaths) {
-                if (HelperUtil.getLocaleFromPropertyFile(path).equals(Locale.ENGLISH.toString())) {
-                    paths.add(path);
-                } else {
-                	paths.add(HelperUtil.removeLanguageFromPath(path));
-                }
-            }
+			Set<String> paths = new HashSet<>();
+			for (String path : fullPaths) {
+				if (HelperUtil.getLocaleFromPropertyFile(path).equals(Locale.ENGLISH.toString())) {
+					paths.add(path);
+				} else {
+					paths.add(HelperUtil.removeLanguageFromPath(path));
+				}
+			}
 
-            return fileIgnoring
-                ? filterIgnoredEntries(paths, path -> path)
-                : paths;
-        } catch (Exception e) {
-            throw new DatabaseException(e.getMessage(), e);
-        }
+			return fileIgnoring ? filterIgnoredEntries(paths, path -> path) : paths;
+		} catch (Exception e) {
+			throw new DatabaseException(e.getMessage(), e);
+		}
 
-    }
+	}
 
-    private <TEntry> Set<TEntry> filterIgnoredEntries(Set<TEntry> entries, Function<TEntry, String> getFullPath) {
-        return streamIgnoredEntries(entries, getFullPath)
-            .collect(Collectors.toSet());
-    }
+	private <TEntry> Set<TEntry> filterIgnoredEntries(Set<TEntry> entries, Function<TEntry, String> getFullPath) {
+		return streamIgnoredEntries(entries, getFullPath).collect(Collectors.toSet());
+	}
 
-    private <TEntry> List<TEntry> filterIgnoredEntries(List<TEntry> entries, Function<TEntry, String> getFullPath) {
-        return streamIgnoredEntries(entries, getFullPath)
-            .collect(Collectors.toList());
-    }
+	private <TEntry> List<TEntry> filterIgnoredEntries(List<TEntry> entries, Function<TEntry, String> getFullPath) {
+		return streamIgnoredEntries(entries, getFullPath).collect(Collectors.toList());
+	}
 
-    private <TEntry> Stream<TEntry> streamIgnoredEntries(Collection<TEntry> entries, Function<TEntry, String> getFullPath) {
-        Set<String> ignoredFiles = ignoredItemDao.listIgnoredFiles();
+	private <TEntry> Stream<TEntry> streamIgnoredEntries(Collection<TEntry> entries,
+			Function<TEntry, String> getFullPath) {
+		Set<String> ignoredFiles = ignoredItemDao.listIgnoredFiles();
 
-        return entries.stream()
-            .filter(entry -> !HelperUtil.isIgnoredFile(ignoredFiles, getFullPath.apply(entry)));
-    }
+		return entries.stream().filter(entry -> !HelperUtil.isIgnoredFile(ignoredFiles, getFullPath.apply(entry)));
+	}
+/*
+	public void saveLocalizations(List<Localization> locs) throws DatabaseException, CommandException {
+		List<Localization> failedLocalizations = new ArrayList<>();
+		Localization currentLoc = null;
+		try {
+			getEntityManager().getTransaction().begin();
+			for (Localization loc : locs) {
+				currentLoc = loc;
+				ValidationHelper.validateBean(loc);
+				getEntityManager().persist(loc);
 
-    public void saveLocalizations(List<Localization> locs) throws DatabaseException {
-        try {
-            getEntityManager().getTransaction().begin();
-            for (Localization loc : locs) {
-                ValidationHelper.validateBean(loc);
-                getEntityManager().persist(loc);
-            }
-            getEntityManager().getTransaction().commit();
+			}
+			getEntityManager().getTransaction().commit();
 
-        } catch (Exception e) {
-            getLogger().log(Level.SEVERE, e.getMessage(), e);
-            if (getEntityManager().getTransaction().isActive()) {
-                getEntityManager().getTransaction().setRollbackOnly();
-            }
-            throw new DatabaseException(e.getMessage(), e);
-        }
-    }
+		} catch (Exception e) {
+			failedLocalizations.add(currentLoc);
+			currentLoc = null;
+			getLogger().log(Level.SEVERE, e.getMessage(), e);
+		} finally {
+			if (!failedLocalizations.isEmpty()) {
+				FailedLocalization.createFailedLocalizationsCSV(failedLocalizations);
+			}
+		}
+	}
+	
+	*/
+	
+	
+	public void saveLocalizations(List<Localization> locs) throws DatabaseException, CommandException {
+	    List<Localization> failedLocalizations = new ArrayList<>();
 
-    /**
-     * The object will evict from the hibernate session.
-     *
-     * @param localization
-     */
-    public void detach(Localization localization) {
-        getEntityManager().detach(localization);
-    }
+	    try {
+	        getEntityManager().getTransaction().begin();
+	        for (Localization loc : locs) {
+	            try {
+	                ValidationHelper.validateBean(loc);
+	                getEntityManager().persist(loc);
+	                getEntityManager().flush();
+	            } catch (Exception e) {
+	                failedLocalizations.add(loc);
+	                getLogger().log(Level.SEVERE, e.getMessage(), e);
+	            }
+	        }
+	        getEntityManager().getTransaction().commit();
+	    } catch (Exception e) {
+	        getLogger().log(Level.SEVERE, e.getMessage(), e);
+	        throw new DatabaseException("Fehler beim Speichern der Lokalisierungen.", e);
+	    } finally {
+	        if (!failedLocalizations.isEmpty()) {
+	            FailedLocalization.createFailedLocalizationsCSV(failedLocalizations);
+	        }
+	    }
+	}
 
-    public long countOfProperties(Status status, Locale locale, boolean emptyProperties) throws DatabaseException {
-        try {
-            String queryStr = null;
 
-            if (locale != null) {
-                queryStr = "select count(target.id) from " + Localization.class.getSimpleName()
-                        + " target where target.status = :status " + " AND target.locale = :locale"
-                        + " AND target.version = " + lastVersion(status);
+	/**
+	 * The object will evict from the hibernate session.
+	 *
+	 * @param localization
+	 */
+	public void detach(Localization localization) {
+		getEntityManager().detach(localization);
+	}
 
-            } else {
-                queryStr = "select count(target.id) from " + Localization.class.getSimpleName()
-                        + " target where target.status = :status" + " AND target.version = " + lastVersion(status);
-            }
-            if (emptyProperties)
-                queryStr += EMPTY_PROPERTIES_HQL;
+	public long countOfProperties(Status status, Locale locale, boolean emptyProperties) throws DatabaseException {
+		try {
+			String queryStr = null;
 
-            Query query = getEntityManager().createQuery(queryStr);
-            query.setParameter("status", status);
-            if (locale != null)
-                query.setParameter("locale", locale.getLanguage());
-            Long countOf = (Long) query.getSingleResult();
-            return countOf == null ? 0 : countOf;
-        } catch (Exception e) {
-            throw new DatabaseException(e.getMessage(), e);
-        }
+			if (locale != null) {
+				queryStr = "select count(target.id) from " + Localization.class.getSimpleName()
+						+ " target where target.status = :status " + " AND target.locale = :locale"
+						+ " AND target.version = " + lastVersion(status);
 
-    }
+			} else {
+				queryStr = "select count(target.id) from " + Localization.class.getSimpleName()
+						+ " target where target.status = :status" + " AND target.version = " + lastVersion(status);
+			}
+			if (emptyProperties)
+				queryStr += EMPTY_PROPERTIES_HQL;
+
+			Query query = getEntityManager().createQuery(queryStr);
+			query.setParameter("status", status);
+			if (locale != null)
+				query.setParameter("locale", locale.getLanguage());
+			Long countOf = (Long) query.getSingleResult();
+			return countOf == null ? 0 : countOf;
+		} catch (Exception e) {
+			throw new DatabaseException(e.getMessage(), e);
+		}
+
+	}
 
 }

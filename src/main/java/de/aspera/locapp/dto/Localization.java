@@ -43,7 +43,7 @@ public class Localization implements Serializable {
     private Status status;
 
     public enum Status {
-        SRC, XLS, TRANSLATED, VERIFIED, REJECT, DONE
+        SRC, XLS, TRANSLATED, VERIFIED, REJECT, DONE, CSV
     }
 
     @Column(name = "ID")

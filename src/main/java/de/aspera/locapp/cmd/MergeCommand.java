@@ -37,7 +37,7 @@ public class MergeCommand implements CommandRunnable {
         }
     }
 
-    private void mergeProperties(String... options) throws DatabaseException {
+    private void mergeProperties(String... options) throws DatabaseException, CommandException {
 
         if (options == null || options.length == 0) {
             logger.log(Level.WARNING, "No command parameters was found!");

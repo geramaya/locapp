@@ -43,7 +43,7 @@ public class ImportDeltaCommand implements CommandRunnable {
     private Map<String, Integer> languagePositonMap = new HashMap<>();
 
     @Override
-    public void run() {
+    public void run() throws CommandException {
         try {
             long start = System.currentTimeMillis();
             doImport();
@@ -54,7 +54,7 @@ public class ImportDeltaCommand implements CommandRunnable {
         }
     }
 
-    private void doImport() throws DatabaseException, IOException {
+    private void doImport() throws DatabaseException, IOException, CommandException {
         String importPath = CommandContext.getInstance().nextArgument();
         String lastVersionStr = CommandContext.getInstance().nextArgument();
         int lastVersion = 0;
