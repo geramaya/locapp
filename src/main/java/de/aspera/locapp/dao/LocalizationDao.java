@@ -242,7 +242,7 @@ public class LocalizationDao extends AbstractDao<Localization> {
 
 		return entries.stream().filter(entry -> !HelperUtil.isIgnoredFile(ignoredFiles, getFullPath.apply(entry)));
 	}
-/*
+
 	public void saveLocalizations(List<Localization> locs) throws DatabaseException, CommandException {
 		List<Localization> failedLocalizations = new ArrayList<>();
 		Localization currentLoc = null;
@@ -266,36 +266,6 @@ public class LocalizationDao extends AbstractDao<Localization> {
 			}
 		}
 	}
-	
-	*/
-	
-	
-	public void saveLocalizations(List<Localization> locs) throws DatabaseException, CommandException {
-	    List<Localization> failedLocalizations = new ArrayList<>();
-
-	    try {
-	        getEntityManager().getTransaction().begin();
-	        for (Localization loc : locs) {
-	            try {
-	                ValidationHelper.validateBean(loc);
-	                getEntityManager().persist(loc);
-	                getEntityManager().flush();
-	            } catch (Exception e) {
-	                failedLocalizations.add(loc);
-	                getLogger().log(Level.SEVERE, e.getMessage(), e);
-	            }
-	        }
-	        getEntityManager().getTransaction().commit();
-	    } catch (Exception e) {
-	        getLogger().log(Level.SEVERE, e.getMessage(), e);
-	        throw new DatabaseException("Fehler beim Speichern der Lokalisierungen.", e);
-	    } finally {
-	        if (!failedLocalizations.isEmpty()) {
-	            FailedLocalization.createFailedLocalizationsCSV(failedLocalizations);
-	        }
-	    }
-	}
-
 
 	/**
 	 * The object will evict from the hibernate session.

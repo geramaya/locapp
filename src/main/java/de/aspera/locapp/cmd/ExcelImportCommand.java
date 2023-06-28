@@ -99,8 +99,10 @@ public class ExcelImportCommand implements CommandRunnable {
 
     private Map<String, Integer> buildLanguagePosMap(String cellValue, int cellPos) {
         String language = Locale.ENGLISH.toString();
-        if (cellValue.trim().toLowerCase().contains("value")) {
-            language = StringUtils.substringBetween(cellValue.trim(), "(", ")").toLowerCase();
+        String valueIdent = "value_";
+        cellValue = cellValue.trim().toLowerCase();
+		if (cellValue.contains(valueIdent)) {
+            language = cellValue.substring(6,8); // get Locale as String (de, en, fr)
             if (cellValue.trim().toLowerCase().contains(language)) {
                 languagePositonMap.put(language, cellPos);
             }

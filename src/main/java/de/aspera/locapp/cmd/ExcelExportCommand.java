@@ -255,10 +255,10 @@ public class ExcelExportCommand implements CommandRunnable {
         headers.add("Filename");
         headers.add("Key");
         if (StringUtils.isNotEmpty(language)) {
-            headers.add("Value (" + language + ")");
+            headers.add("VALUE_" + language.toUpperCase());
         } else {
             for (String lang : knownLanguages) {
-                headers.add("Value (" + lang + ")");
+                headers.add("VALUE_" + lang.toUpperCase());
             }
         }
         headers.add("FullPath");

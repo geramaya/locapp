@@ -45,7 +45,7 @@ public class CSVImportCommand implements CommandRunnable {
 				CSVParser csvParser = new CSVParser(fileReader, CSVFormat.DEFAULT)) {
 
 			List<Localization> localizations = new ArrayList<>();
-			int lastVersion = locFacade.lastVersion(Status.XLS) + 1;
+			int lastVersion = locFacade.lastVersion(Status.CSV) + 1;
 
 			int valueColumnCount = 0;
 			int fullPathColumnIndex = -1;
@@ -74,7 +74,7 @@ public class CSVImportCommand implements CommandRunnable {
 					loc.setFileName(filename);
 					loc.setKey(propertyKey);
 					String columnValue = csvRecord.get(i);
-					String locale = headers.get(i).substring(6, 8).toLowerCase();
+					String locale = headers.get(i).substring(6, 8).toLowerCase(); // get language
 					loc.setLocale(locale);
 					loc.setFullPath(locale.equals(Locale.ENGLISH.toString()) ? fullPath
 							: HelperUtil.replaceFullPath(fullPath, locale));
