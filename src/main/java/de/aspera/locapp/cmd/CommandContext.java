@@ -104,5 +104,6 @@ public class CommandContext {
         addCommand("set-default-language", SetDefaultLanguageCommand.class);
         addCommand("csv-import", CSVImportCommand.class);
         addCommand("csvin", CSVImportCommand.class);
+        addCommand("cscmig", CSCMigrationCommand.class);
     }
 }

@@ -15,8 +15,8 @@ public abstract class BasicFacadeTest {
     static {
         Resources.getInstance();
         System.getProperties().put("DBNAME", "test-database");
-        System.getProperties().put("DBACTION", "drop-and-create");
-        // System.getProperties().put("DBACTION", "create");
+        // System.getProperties().put("DBACTION", "drop-and-create");
+        System.getProperties().put("DBACTION", "create");
     }
     public static final CommandContext CMDCTX = CommandContext.getInstance();
     protected final Logger logger = Logger.getLogger(getLoggerClass().getName());
