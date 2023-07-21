@@ -43,7 +43,7 @@ public class Localization implements Serializable {
     private Status status;
 
     public enum Status {
-        SRC, XLS, TRANSLATED, VERIFIED, REJECT, DONE
+        SRC, XLS, TRANSLATED, VERIFIED, REJECT, DONE, CSV
     }
 
     @Column(name = "ID")
@@ -55,7 +55,7 @@ public class Localization implements Serializable {
         this.id = id;
     }
 
-    @Column(name = "KEY")
+    @Column(name = "PROPERTY_KEY")
     public String getKey() {
         return key;
     }

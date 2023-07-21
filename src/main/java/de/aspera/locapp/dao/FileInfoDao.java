@@ -15,9 +15,9 @@ import de.aspera.locapp.util.ValidationHelper;
  *
  * @author daniel
  */
-public class FileInfoFacade extends AbstractFacade<FileInfo> {
+public class FileInfoDao extends AbstractDao<FileInfo> {
 
-    public FileInfoFacade() {
+    public FileInfoDao() {
         super(FileInfo.class);
     }
 

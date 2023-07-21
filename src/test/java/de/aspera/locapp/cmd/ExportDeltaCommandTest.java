@@ -19,7 +19,7 @@ import org.junit.Test;
 
 import de.aspera.locapp.dao.BasicFacadeTest;
 import de.aspera.locapp.dao.DatabaseException;
-import de.aspera.locapp.dao.LocalizationFacade;
+import de.aspera.locapp.dao.LocalizationDao;
 import de.aspera.locapp.dto.Localization;
 import de.aspera.locapp.dto.Localization.Status;
 
@@ -87,7 +87,7 @@ public class ExportDeltaCommandTest extends BasicFacadeTest {
         Workbook wb = new HSSFWorkbook(file);
         Sheet sheet = wb.getSheetAt(0);
         Iterator<Row> rows = sheet.iterator();
-        LocalizationFacade locaFacade = new LocalizationFacade();
+        LocalizationDao locaFacade = new LocalizationDao();
         List<Localization> localizations = locaFacade.getLocalizations(locaFacade.lastVersion(Status.SRC), Status.SRC, false, null);
         String fullPath = localizations.get(0).getFullPath();
         String resultFullPath;

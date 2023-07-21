@@ -12,13 +12,13 @@ import java.util.logging.Logger;
 import org.apache.commons.io.FileUtils;
 
 import de.aspera.locapp.dao.DatabaseException;
-import de.aspera.locapp.dao.IgnoredItemFacade;
+import de.aspera.locapp.dao.IgnoredItemDao;
 import de.aspera.locapp.dto.IgnoredItem;
 
 public class ImportIgnoredItemsCommand implements CommandRunnable {
 	private static final Logger logger = Logger.getLogger(ImportIgnoredItemsCommand.class.getName());
 
-	private IgnoredItemFacade ignoredItemFacade = new IgnoredItemFacade();
+	private IgnoredItemDao ignoredItemFacade = new IgnoredItemDao();
 
 	@Override
 	public void run() {

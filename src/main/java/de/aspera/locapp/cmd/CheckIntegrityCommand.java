@@ -7,14 +7,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import de.aspera.locapp.dao.DatabaseException;
-import de.aspera.locapp.dao.LocalizationFacade;
+import de.aspera.locapp.dao.LocalizationDao;
 import de.aspera.locapp.dto.Localization;
 import de.aspera.locapp.dto.Localization.Status;
 
 public class CheckIntegrityCommand implements CommandRunnable {
 
     private static final Logger logger = Logger.getLogger(CheckIntegrityCommand.class.getName());
-    private LocalizationFacade locFacade = new LocalizationFacade();
+    private LocalizationDao locFacade = new LocalizationDao();
 
     @Override
     public void run() {

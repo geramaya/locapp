@@ -9,7 +9,7 @@ import org.junit.Test;
 
 import de.aspera.locapp.dao.BasicFacadeTest;
 import de.aspera.locapp.dao.DatabaseException;
-import de.aspera.locapp.dao.LocalizationFacade;
+import de.aspera.locapp.dao.LocalizationDao;
 import de.aspera.locapp.dto.Localization.Status;
 
 public class PropertiesCounterCommandTest extends BasicFacadeTest {
@@ -51,27 +51,27 @@ public class PropertiesCounterCommandTest extends BasicFacadeTest {
         CMDCTX.addArgument("fr");
         CMDCTX.executeCommand(CMDCTX.nextArgument());
 
-        long countSRC = new LocalizationFacade().countOfProperties(Status.SRC, null, false);
+        long countSRC = new LocalizationDao().countOfProperties(Status.SRC, null, false);
         Assert.assertNotNull(countSRC);
         Assert.assertEquals(10, countSRC);
 
-        countSRC = new LocalizationFacade().countOfProperties(Status.SRC, Locale.GERMAN, false);
+        countSRC = new LocalizationDao().countOfProperties(Status.SRC, Locale.GERMAN, false);
         Assert.assertNotNull(countSRC);
         Assert.assertEquals(2, countSRC);
 
-        countSRC = new LocalizationFacade().countOfProperties(Status.SRC, Locale.ENGLISH, false);
+        countSRC = new LocalizationDao().countOfProperties(Status.SRC, Locale.ENGLISH, false);
         Assert.assertNotNull(countSRC);
         Assert.assertEquals(4, countSRC);
 
-        countSRC = new LocalizationFacade().countOfProperties(Status.SRC, Locale.FRENCH, false);
+        countSRC = new LocalizationDao().countOfProperties(Status.SRC, Locale.FRENCH, false);
         Assert.assertNotNull(countSRC);
         Assert.assertEquals(3, countSRC);
 
-        countSRC = new LocalizationFacade().countOfProperties(Status.SRC, Locale.FRENCH, true);
+        countSRC = new LocalizationDao().countOfProperties(Status.SRC, Locale.FRENCH, true);
         Assert.assertNotNull(countSRC);
         Assert.assertEquals(2, countSRC);
 
-        countSRC = new LocalizationFacade().countOfProperties(Status.SRC, Locale.ITALIAN, false);
+        countSRC = new LocalizationDao().countOfProperties(Status.SRC, Locale.ITALIAN, false);
         Assert.assertNotNull(countSRC);
         Assert.assertEquals(1, countSRC);
 

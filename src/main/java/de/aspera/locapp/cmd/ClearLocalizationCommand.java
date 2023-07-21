@@ -4,7 +4,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import de.aspera.locapp.dao.DatabaseException;
-import de.aspera.locapp.dao.LocalizationFacade;
+import de.aspera.locapp.dao.LocalizationDao;
 
 public class ClearLocalizationCommand implements CommandRunnable {
 
@@ -13,7 +13,7 @@ public class ClearLocalizationCommand implements CommandRunnable {
     @Override
     public void run() {
         try {
-            new LocalizationFacade().removeAll();
+            new LocalizationDao().removeAll();
             LOGGER.log(Level.INFO, "All Localization entries were deleted!");
         } catch (DatabaseException e) {
             LOGGER.severe(e.getMessage());

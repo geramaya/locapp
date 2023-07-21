@@ -27,7 +27,7 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 
 import de.aspera.locapp.dao.DatabaseException;
-import de.aspera.locapp.dao.LocalizationFacade;
+import de.aspera.locapp.dao.LocalizationDao;
 import de.aspera.locapp.dto.Localization;
 import de.aspera.locapp.dto.Localization.Status;
 
@@ -39,11 +39,11 @@ public class ImportDeltaCommand implements CommandRunnable {
     private static final int COL_KEY = 2;
     private static final Logger LOGGER = Logger.getLogger(ExportDeltaCommand.class.getName());
 
-    private LocalizationFacade locaFacade = new LocalizationFacade();
+    private LocalizationDao locaFacade = new LocalizationDao();
     private Map<String, Integer> languagePositonMap = new HashMap<>();
 
     @Override
-    public void run() {
+    public void run() throws CommandException {
         try {
             long start = System.currentTimeMillis();
             doImport();
@@ -54,7 +54,7 @@ public class ImportDeltaCommand implements CommandRunnable {
         }
     }
 
-    private void doImport() throws DatabaseException, IOException {
+    private void doImport() throws DatabaseException, IOException, CommandException {
         String importPath = CommandContext.getInstance().nextArgument();
         String lastVersionStr = CommandContext.getInstance().nextArgument();
         int lastVersion = 0;

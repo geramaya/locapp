@@ -1,0 +1,4 @@
+FILENAME,KEY,VALUE_DE,VALUE_EN,VALUE_FR,FULLPATH
+LdapSystemListDataViewPanel.properties,btnLabel.create,Anlegen,Create,Créer,.//plugins/plugin-ldap/slc-plugin-ldap/src/main/java/com/aspera/sap/plugin/ldap/web/administration/LdapSystemListDataViewPanel.properties
+LawReportComparisonPanel.properties,lbl.applicationName,Name der Applikation,Application Name,Nom de l'application,.//sapop/slc-web-common/src/main/java/de/securintegration/slc/web/licenseanalysis/LawReportComparisonPanel.properties
+LawReportDataViewPanel.properties,lbl.refUserName,Benutzername,User,Utilisateur,.//sapop/slc-web-common/src/main/java/de/securintegration/slc/web/menu/licenseanalysis/law1/LawReportDataViewPanel.properties

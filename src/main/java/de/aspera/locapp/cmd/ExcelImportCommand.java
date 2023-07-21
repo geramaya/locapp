@@ -22,29 +22,30 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 
 import de.aspera.locapp.dao.DatabaseException;
-import de.aspera.locapp.dao.LocalizationFacade;
+import de.aspera.locapp.dao.LocalizationDao;
 import de.aspera.locapp.dto.Localization;
 import de.aspera.locapp.dto.Localization.Status;
+import de.aspera.locapp.util.HelperUtil;
 
 public class ExcelImportCommand implements CommandRunnable {
     private static final int COL_KEY = 1;
     private static final Logger logger = Logger.getLogger(ExcelExportCommand.class.getName());
-    private LocalizationFacade locFacade = new LocalizationFacade();
+    private LocalizationDao locFacade = new LocalizationDao();
     private Map<String, Integer> languagePositonMap = new HashMap<>();
 
     @Override
-    public void run() {
+    public void run() throws CommandException {
         try {
             long start = System.currentTimeMillis();
             importExcel();
             long end = System.currentTimeMillis() - start;
             logger.log(Level.INFO, "Import Excel file in ms: " + end);
-        } catch (DatabaseException | IOException exp) {
-            logger.log(Level.SEVERE, exp.getMessage(), exp);
+        } catch (DatabaseException | IOException | CommandException exp) {
+            throw new CommandException(exp.getMessage(), exp);
         }
     }
 
-    private void importExcel() throws DatabaseException, IOException {
+    private void importExcel() throws DatabaseException, IOException, CommandException {
         String importPath = CommandContext.getInstance().nextArgument();
         if (StringUtils.isEmpty(importPath) || !importPath.endsWith(".xls")) {
             logger.severe("No excel file found to import! Please define the full path to excel import file.");
@@ -75,7 +76,7 @@ public class ExcelImportCommand implements CommandRunnable {
                     loc.setCreationDate(new Date());
                     String fileName = row.getCell(0).getStringCellValue();
                     loc.setFileName(language.equals(Locale.ENGLISH.toString()) ? fileName
-                            : replaceFullPath(fileName, language));
+                            : HelperUtil.replaceFullPath(fileName, language));
                     loc.setKey(row.getCell(COL_KEY).getStringCellValue());
                     Cell cellByLanguage = row.getCell(languagePositonMap.get(language));
                     String cellValueByLanguage = getStringValue(cellByLanguage);
@@ -83,7 +84,7 @@ public class ExcelImportCommand implements CommandRunnable {
                     loc.setLocale(language);
                     String fullPath = row.getCell(row.getLastCellNum() - 1).getStringCellValue();
                     loc.setFullPath(language.equals(Locale.ENGLISH.toString()) ? fullPath
-                            : replaceFullPath(fullPath, language));
+                            : HelperUtil.replaceFullPath(fullPath, language));
                     loc.setVersion(lastVersion);
                     loc.setStatus(Localization.Status.XLS);
                     if (!loc.getValue().equals(EMPTY_VALUE)) {
@@ -96,14 +97,12 @@ public class ExcelImportCommand implements CommandRunnable {
         workbook.close();
     }
 
-    private String replaceFullPath(String fullPath, String locale) {
-        return StringUtils.replace(fullPath, ".properties", "_" + locale + ".properties");
-    }
-
     private Map<String, Integer> buildLanguagePosMap(String cellValue, int cellPos) {
         String language = Locale.ENGLISH.toString();
-        if (cellValue.trim().toLowerCase().contains("value")) {
-            language = StringUtils.substringBetween(cellValue.trim(), "(", ")").toLowerCase();
+        String valueIdent = "value_";
+        cellValue = cellValue.trim().toLowerCase();
+		if (cellValue.contains(valueIdent)) {
+            language = cellValue.substring(6,8); // get Locale as String (de, en, fr)
             if (cellValue.trim().toLowerCase().contains(language)) {
                 languagePositonMap.put(language, cellPos);
             }

@@ -1,0 +1,8 @@
+unitils-default.properties
+application.properties
+logging.properties
+docker_mariadb.properties
+slc_mariadb.properties
+docker_mssql.properties
+unitils.properties
+LicenseWeightPanel.properties

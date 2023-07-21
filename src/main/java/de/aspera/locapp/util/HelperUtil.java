@@ -115,5 +115,10 @@ public class HelperUtil {
     public static final String currentTimestamp() {
         return FILE_TIMESTAMP_SIMPLE_DATE_FORMAT.format(new Date());
     }
+    
+    public static String replaceFullPath(String fullPath, String locale) {
+        return StringUtils.replace(fullPath, ".properties", "_" + locale + ".properties");
+    }
+
 
 }

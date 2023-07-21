@@ -5,11 +5,11 @@ import java.util.MissingResourceException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import de.aspera.locapp.dao.ConfigFacade;
+import de.aspera.locapp.dao.ConfigDao;
 import de.aspera.locapp.dao.DatabaseException;
 
 public class SetDefaultLanguageCommand implements CommandRunnable {
-    private ConfigFacade configFacade = new ConfigFacade();
+    private ConfigDao configFacade = new ConfigDao();
     private Logger logger = Logger.getLogger(SetDefaultLanguageCommand.class.getName());
 
     @Override
@@ -26,15 +26,15 @@ public class SetDefaultLanguageCommand implements CommandRunnable {
         String selectedLanguage = CommandContext.getInstance()
 			    .nextArgument();
 		var language = selectedLanguage != null ? selectedLanguage.toLowerCase()
-				: ConfigFacade.DEFAULT_LANGUAGE.toLowerCase();
+				: ConfigDao.DEFAULT_LANGUAGE.toLowerCase();
 		
 		Locale locale;
 		try {
 			locale = new Locale(language);
 			locale.getISO3Language();
 		} catch (MissingResourceException e) {
-			logger.log(Level.SEVERE, "Language [" + language + "] is invalid. [" + ConfigFacade.DEFAULT_LANGUAGE.toLowerCase() + "] was selected as default language!");
-			locale = new Locale(ConfigFacade.DEFAULT_LANGUAGE.toLowerCase());
+			logger.log(Level.SEVERE, "Language [" + language + "] is invalid. [" + ConfigDao.DEFAULT_LANGUAGE.toLowerCase() + "] was selected as default language!");
+			locale = new Locale(ConfigDao.DEFAULT_LANGUAGE.toLowerCase());
 		}
         configFacade.setDefaultLanguage(locale);
         logger.log(Level.INFO, "The configured default language is [" + locale.getLanguage() + "]");
