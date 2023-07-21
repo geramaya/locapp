@@ -7,7 +7,7 @@ import org.junit.Test;
 import de.aspera.locapp.dao.BasicFacadeTest;
 import de.aspera.locapp.dao.DatabaseException;
 
-public class CSVMigrationCommandTest extends BasicFacadeTest {
+public class CSCMigrationCommandTest extends BasicFacadeTest {
 	
 
 	public void initTest() throws CommandException {
@@ -34,7 +34,7 @@ public class CSVMigrationCommandTest extends BasicFacadeTest {
 		// initTest();
 		
 		CMDCTX.addArgument("cscmig");
-		String file = CSVMigrationCommandTest.class.getClassLoader().getResource("SAPOP_Translations_CSC.csv").getFile();
+		String file = CSCMigrationCommandTest.class.getClassLoader().getResource("SAPOP_Translations_CSC.csv").getFile();
 		CMDCTX.addArgument(file);
 		CMDCTX.executeCommand(CMDCTX.nextArgument());
 //        long countSRC = new LocalizationDao().countOfProperties(Status.CSV, null, false);
