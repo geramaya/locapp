@@ -8,10 +8,7 @@ public class HelpCommand implements CommandRunnable {
         System.out.println("\t(q)uit: \t\t\t\tQuit the program.");
         System.out.println("\t(ip)import-properties: \t\t\tIterate known properties and save into database.");
         System.out.println("\t(ep)export-properties DIR: \t\tIterate known properties and save into directory.");
-        
-        System.out.println("\t(csvex)csv-export [L] [EV]: \t\tExport properties as CSV formatted file (by language ISOCODE[L], search for empty values [EV(empty values)=1])");
-        System.out.println("\t(csvin)csv-import DIR: \t\t\tImport properties as CSV formatted file (by language ISOCODE[L], search for empty values [EV(empty values)=1])");
-        
+        System.out.println("\t(csvin)csv-import DIR: \t\t\tImport properties as CSV formatted file");
         System.out.println("\t(ee)excel-export DIR [L] [EV]: \t\tExport properties into an excel file (all or by language ISOCODE[L], search for empty values [EV(empty values)=1])");
         System.out.println("\t(ei)excel-import DIR: \t\t\tImport properties from an excel file");
         System.out.println("\t(ed)export-delta DIR: \t\t\tExport delta (properties vs. excel) into an excel file");
