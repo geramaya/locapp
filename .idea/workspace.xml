@@ -55,7 +55,7 @@
       <command value="mvn clean compile" />
     </option>
   </component>
-  <component name="RunManager" selected="JUnit.java in locapp">
+  <component name="RunManager" selected="Application.MainStart">
     <configuration name="MainStart" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="ALTERNATIVE_JRE_PATH" value="11" />
       <option name="MAIN_CLASS_NAME" value="de.aspera.locapp.main.MainStart" />
@@ -84,8 +84,8 @@
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="JUnit.java in locapp" />
         <item itemvalue="Application.MainStart" />
+        <item itemvalue="JUnit.java in locapp" />
       </list>
     </recent_temporary>
   </component>
@@ -144,7 +144,7 @@
       <workItem from="1757100709833" duration="199000" />
       <workItem from="1758376481069" duration="1330000" />
       <workItem from="1758395383324" duration="661000" />
-      <workItem from="1763898435387" duration="428000" />
+      <workItem from="1763898435387" duration="880000" />
     </task>
     <servers />
   </component>
