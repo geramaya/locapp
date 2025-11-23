@@ -98,7 +98,7 @@
 				<version>3.8.0</version>
 				<configuration>
 					<encoding>UTF-8</encoding>
-					<release>21</release>
+					<release>${jre.compiler.version}</release>
 					<optimize>true</optimize>
 					<debug>true</debug>
 				</configuration>
