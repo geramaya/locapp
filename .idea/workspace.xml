@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="4780b9f4-1e70-47dd-86b6-e4ae53eb9c5c" name="Changes" comment="" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="ProjectErrors" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;customColor&quot;: &quot;&quot;,
+  &quot;associatedIndex&quot;: 2
+}</component>
+  <component name="ProjectId" id="2hCSg72NBBt5Ec7wsumVipsuvlq" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Application.MainStart.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/dweiss/_develop/locapp&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.0&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.0&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
+    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  }
+}</component>
+  <component name="RunManager">
+    <configuration name="MainStart" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="ALTERNATIVE_JRE_PATH" value="11" />
+      <option name="MAIN_CLASS_NAME" value="de.aspera.locapp.main.MainStart" />
+      <module name="locapp" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="de.aspera.locapp.main.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Application.MainStart" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-jdk-9823dce3aa75-bf35d07a577b-intellij.indexing.shared.core-IU-252.26199.169" />
+        <option value="bundled-js-predefined-d6986cc7102b-9c94529fcfe0-JavaScript-IU-252.26199.169" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="4780b9f4-1e70-47dd-86b6-e4ae53eb9c5c" name="Changes" comment="" />
+      <created>1717096676516</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1717096676516</updated>
+      <workItem from="1717096678899" duration="1431000" />
+      <workItem from="1717332720451" duration="657000" />
+      <workItem from="1717757087587" duration="35000" />
+      <workItem from="1717757131392" duration="704000" />
+      <workItem from="1718091554957" duration="74000" />
+      <workItem from="1719056054398" duration="27000" />
+      <workItem from="1719504827734" duration="127000" />
+      <workItem from="1722704500409" duration="1517000" />
+      <workItem from="1723388388436" duration="694000" />
+      <workItem from="1725819150211" duration="41000" />
+      <workItem from="1727541259336" duration="1614000" />
+      <workItem from="1727555693179" duration="71000" />
+      <workItem from="1727824742453" duration="30000" />
+      <workItem from="1732450186847" duration="601000" />
+      <workItem from="1734126696641" duration="693000" />
+      <workItem from="1734133724675" duration="370000" />
+      <workItem from="1737314971359" duration="178000" />
+      <workItem from="1737324298337" duration="860000" />
+      <workItem from="1737404921548" duration="25000" />
+      <workItem from="1737404958794" duration="262000" />
+      <workItem from="1737888192458" duration="167000" />
+      <workItem from="1737888367620" duration="60000" />
+      <workItem from="1737922482056" duration="50000" />
+      <workItem from="1740519083550" duration="597000" />
+      <workItem from="1740519687787" duration="28000" />
+      <workItem from="1740519722723" duration="70000" />
+      <workItem from="1740519800342" duration="60000" />
+      <workItem from="1741478626570" duration="9000" />
+      <workItem from="1741776945464" duration="1323000" />
+      <workItem from="1741782858101" duration="175000" />
+      <workItem from="1741783042035" duration="797000" />
+      <workItem from="1742045206735" duration="24000" />
+      <workItem from="1743109896194" duration="495000" />
+      <workItem from="1743110403837" duration="367000" />
+      <workItem from="1743618132838" duration="690000" />
+      <workItem from="1747680555067" duration="613000" />
+      <workItem from="1757100709833" duration="199000" />
+      <workItem from="1758376481069" duration="1330000" />
+      <workItem from="1758395383324" duration="661000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="OPEN_GENERIC_TABS">
+      <map>
+        <entry key="2dccff5a-48d6-4ba1-9c73-5c31b23753b9" value="TOOL_WINDOW" />
+      </map>
+    </option>
+    <option name="TAB_STATES">
+      <map>
+        <entry key="2dccff5a-48d6-4ba1-9c73-5c31b23753b9">
+          <value>
+            <State>
+              <option name="FILTERS">
+                <map>
+                  <entry key="branch">
+                    <value>
+                      <list>
+                        <option value="HEAD" />
+                      </list>
+                    </value>
+                  </entry>
+                  <entry key="roots">
+                    <value>
+                      <list>
+                        <option value="$PROJECT_DIR$" />
+                      </list>
+                    </value>
+                  </entry>
+                </map>
+              </option>
+              <option name="SHOW_ONLY_AFFECTED_CHANGES" value="true" />
+            </State>
+          </value>
+        </entry>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="java-field">
+          <url>file://$PROJECT_DIR$/src/main/java/de/aspera/locapp/main/MainStart.java</url>
+          <line>34</line>
+          <properties field="logger" class="de.aspera.locapp.main.MainStart" />
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+  <component name="XSLT-Support.FileAssociations.UIState">
+    <expand />
+    <select />
+  </component>
+</project>
