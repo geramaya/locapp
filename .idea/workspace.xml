@@ -30,6 +30,7 @@
     "Application.MainStart.executor": "Run",
     "JUnit.java in locapp.executor": "Run",
     "Maven.locapp [clean,compile].executor": "Run",
+    "Maven.locapp [clean,install].executor": "Run",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
@@ -53,6 +54,7 @@
   <component name="RunAnythingCache">
     <option name="myCommands">
       <command value="mvn clean compile" />
+      <command value="mvn clean install" />
     </option>
   </component>
   <component name="RunManager" selected="Application.MainStart">
@@ -144,7 +146,7 @@
       <workItem from="1757100709833" duration="199000" />
       <workItem from="1758376481069" duration="1330000" />
       <workItem from="1758395383324" duration="661000" />
-      <workItem from="1763898435387" duration="880000" />
+      <workItem from="1763898435387" duration="1710000" />
     </task>
     <servers />
   </component>
