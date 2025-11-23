@@ -5,7 +5,7 @@ import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.persistence.Query;
+import jakarta.persistence.Query;
 
 import de.aspera.locapp.dto.Config;
 import de.aspera.locapp.util.ValidationHelper;
