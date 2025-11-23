@@ -26,7 +26,7 @@ all available * .properties files from a root directory and imports the path and
 
 ### Requirements:
 
-- Java 8.x
+- Java 21 or higher
 - Apache Maven 3.0.5 or higher
 - All properties files should be formatted as utf-8 without BOM (byte order mark)
 
