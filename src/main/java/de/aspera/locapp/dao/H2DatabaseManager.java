@@ -33,7 +33,12 @@ public class H2DatabaseManager {
     public static H2DatabaseManager getInstance() {
         if (instance == null) {
             instance = new H2DatabaseManager();
-            instance.init();
+            try {
+                instance.init();
+            } catch (Exception e) {
+                instance = null; // Reset instance on failure
+                throw e;
+            }
         }
         return instance;
     }
@@ -64,8 +69,19 @@ public class H2DatabaseManager {
         // databaseProperties.put("eclipselink.logging.level", "WARNING");
         // databaseProperties.put("eclipselink.logging.parameters", "true");
 
-        EntityManagerFactory factory = Persistence.createEntityManagerFactory("h2locapp", databaseProperties);
-        theManager = factory.createEntityManager();
+        try {
+            EntityManagerFactory factory = Persistence.createEntityManagerFactory("h2locapp", databaseProperties);
+            theManager = factory.createEntityManager();
+        } catch (Exception e) {
+            String errorMsg = e.getMessage();
+            if (errorMsg != null && errorMsg.contains("Unsupported database file version")) {
+                throw new RuntimeException(
+                    "H2 database file is incompatible with H2 2.x. " +
+                    "Please delete the old database files in ~/.locapp/ or backup and migrate your data. " +
+                    "Database location: " + databaseProperties.get("jakarta.persistence.jdbc.url"), e);
+            }
+            throw new RuntimeException("Failed to initialize H2 database: " + errorMsg, e);
+        }
     }
 
     public EntityManager getEntityManager() {

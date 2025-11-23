@@ -30,6 +30,17 @@ all available * .properties files from a root directory and imports the path and
 - Apache Maven 3.0.5 or higher
 - All properties files should be formatted as utf-8 without BOM (byte order mark)
 
+### Database Migration (H2 2.x):
+
+**Important:** If upgrading from a version using H2 1.4.x, the database files are incompatible with H2 2.x.
+
+Before running the updated version:
+1. Backup your existing data (export to Excel if needed)
+2. Delete old database files: `rm -f ~/.locapp/*.db`
+3. Run the application - it will create a new H2 2.x compatible database
+
+Alternatively, you can keep your old database by using H2's migration tool, but this is not required for most use cases.
+
 ###  Install and run:
 
 - Clone the project
