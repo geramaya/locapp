@@ -8,9 +8,9 @@ package de.aspera.locapp.dao;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.Persistence;
 
 import de.aspera.locapp.util.Resources;
 
@@ -52,15 +52,15 @@ public class H2DatabaseManager {
 
         // AUTO_SERVER=TRUE erm�glicht den Zugriff f�r mehrere Apps auf die
         // gleich Datenbank!
-        databaseProperties.put("javax.persistence.jdbc.url",
+        databaseProperties.put("jakarta.persistence.jdbc.url",
                 "jdbc:h2:~/." + Resources.PROJECT_NAME + "/"
                         + (dbname != null ? dbname.toString() : Resources.getInstance().getProperty("db-name"))
                         + ";AUTO_SERVER=TRUE");
-        databaseProperties.put("javax.persistence.jdbc.user", Resources.getInstance().getProperty("db-user"));
-        databaseProperties.put("javax.persistence.jdbc.password", Resources.getInstance().getProperty("db-password"));
+        databaseProperties.put("jakarta.persistence.jdbc.user", Resources.getInstance().getProperty("db-user"));
+        databaseProperties.put("jakarta.persistence.jdbc.password", Resources.getInstance().getProperty("db-password"));
 
-        databaseProperties.put("javax.persistence.jdbc.driver", "org.h2.Driver");
-        databaseProperties.put("javax.persistence.schema-generation.database.action", dbaction.toString());
+        databaseProperties.put("jakarta.persistence.jdbc.driver", "org.h2.Driver");
+        databaseProperties.put("jakarta.persistence.schema-generation.database.action", dbaction.toString());
         // databaseProperties.put("eclipselink.logging.level", "WARNING");
         // databaseProperties.put("eclipselink.logging.parameters", "true");
 
