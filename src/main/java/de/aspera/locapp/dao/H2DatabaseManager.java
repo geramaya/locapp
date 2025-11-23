@@ -55,7 +55,7 @@ public class H2DatabaseManager {
         databaseProperties.put("jakarta.persistence.jdbc.url",
                 "jdbc:h2:~/." + Resources.PROJECT_NAME + "/"
                         + (dbname != null ? dbname.toString() : Resources.getInstance().getProperty("db-name"))
-                        + ";AUTO_SERVER=TRUE");
+                        + ";AUTO_SERVER=TRUE;NON_KEYWORDS=KEY,VALUE");
         databaseProperties.put("jakarta.persistence.jdbc.user", Resources.getInstance().getProperty("db-user"));
         databaseProperties.put("jakarta.persistence.jdbc.password", Resources.getInstance().getProperty("db-password"));
 

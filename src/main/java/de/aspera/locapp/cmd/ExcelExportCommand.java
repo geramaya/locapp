@@ -54,19 +54,19 @@ public class ExcelExportCommand implements CommandRunnable {
         header.setFillForegroundColor(HSSFColor.GREY_25_PERCENT.index);
         header.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         Font font_header = wb.createFont();
-        font_header.setBoldweight(HSSFFont.BOLDWEIGHT_BOLD);
+        font_header.setBold(true);
         font_header.setColor(HSSFColor.BLACK.index);
         header.setFont(font_header);
         header.setAlignment(HorizontalAlignment.CENTER);
 
         CellStyle style_yellow = wb.createCellStyle();
         style_yellow.setFillForegroundColor(HSSFColor.YELLOW.index);
-        style_yellow.setFillPattern(HSSFCellStyle.SOLID_FOREGROUND);
+        style_yellow.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         Font font_green = wb.createFont();
-        font_green.setBoldweight(HSSFFont.BOLDWEIGHT_BOLD);
+        font_green.setBold(true);
         font_green.setColor(HSSFColor.GREEN.index);
         style_yellow.setFont(font_green);
-        style_yellow.setAlignment(CellStyle.ALIGN_LEFT);
+        style_yellow.setAlignment(HorizontalAlignment.LEFT);
 
         this.styleMap.put(HEADER, header);
         this.styleMap.put(STYLE_YELLOW, style_yellow);
