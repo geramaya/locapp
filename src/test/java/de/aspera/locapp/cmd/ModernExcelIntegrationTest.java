@@ -144,6 +144,7 @@ public class ModernExcelIntegrationTest extends BasicFacadeTest {
             if (value != null && (value.contains("ä") || value.contains("ö") || value.contains("ü"))) {
                 hasSpecialChars = true;
                 logger.info("Special character found in value: " + value);
+                break;
             }
         }
         
