@@ -15,6 +15,9 @@ import de.aspera.locapp.dao.LocalizationDao;
 import de.aspera.locapp.dto.Localization;
 import de.aspera.locapp.dto.Localization.Status;
 
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Parameters;
+
 /**
  * All known properties will be merged with their latest version to a new data set. The submitted status iterate all
  * fetched properties with versions and compare the key-value combination with a newer version and can replace it.
@@ -22,19 +25,39 @@ import de.aspera.locapp.dto.Localization.Status;
  * @author adidweis
  *
  */
-public class MergeCommand implements CommandRunnable {
+@Command(
+    name = "merge-properties",
+    aliases = {"mp"},
+    description = "All known properties will be merged with their latest version to a new data set.",
+    mixinStandardHelpOptions = true
+)
+public class MergeCommand implements CommandRunnable, Runnable {
 
     private static final Logger logger = Logger.getLogger(MergeCommand.class.getName());
     private LocalizationDao locFacade = new LocalizationDao();
     private Map<String, Localization> propertiesMap = new HashMap<>();
 
+    @Parameters(index = "0", description = "Localization type: SRC or XLS", arity = "0..1")
+    private String type;
+
     @Override
     public void run() {
         try {
-            mergeProperties(CommandContext.getInstance().allArguments());
+            if (type != null) {
+                mergeProperties(type);
+            } else {
+                mergeProperties(CommandContext.getInstance().allArguments());
+            }
         } catch (Exception e) {
             logger.log(Level.SEVERE, e.getMessage(), e);
         }
+    }
+    
+    /**
+     * Sets the type programmatically for testing or legacy support.
+     */
+    public void setType(String type) {
+        this.type = type;
     }
 
     private void mergeProperties(String... options) throws DatabaseException, CommandException {

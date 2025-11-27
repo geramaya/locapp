@@ -3,6 +3,7 @@ package de.aspera.locapp.cmd;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -27,26 +28,51 @@ import de.aspera.locapp.dto.Localization;
 import de.aspera.locapp.dto.Localization.Status;
 import de.aspera.locapp.util.HelperUtil;
 
-public class ExcelImportCommand implements CommandRunnable {
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Parameters;
+
+@Command(
+    name = "excel-import",
+    aliases = {"ei"},
+    description = "Import properties from an excel file.",
+    mixinStandardHelpOptions = true
+)
+public class ExcelImportCommand implements CommandRunnable, Runnable {
     private static final int COL_KEY = 1;
     private static final Logger logger = Logger.getLogger(ExcelExportCommand.class.getName());
     private LocalizationDao locFacade = new LocalizationDao();
     private Map<String, Integer> languagePositonMap = new HashMap<>();
 
+    @Parameters(index = "0", description = "Path to the Excel file to import", arity = "0..1")
+    private Path importFile;
+
     @Override
-    public void run() throws CommandException {
+    public void run() {
         try {
             long start = System.currentTimeMillis();
             importExcel();
             long end = System.currentTimeMillis() - start;
             logger.log(Level.INFO, "Import Excel file in ms: " + end);
         } catch (DatabaseException | IOException | CommandException exp) {
-            throw new CommandException(exp.getMessage(), exp);
+            logger.log(Level.SEVERE, exp.getMessage(), exp);
         }
+    }
+    
+    /**
+     * Sets the import file programmatically for testing or legacy support.
+     */
+    public void setImportFile(Path importFile) {
+        this.importFile = importFile;
     }
 
     private void importExcel() throws DatabaseException, IOException, CommandException {
-        String importPath = CommandContext.getInstance().nextArgument();
+        String importPath;
+        if (importFile != null) {
+            importPath = importFile.toString();
+        } else {
+            importPath = CommandContext.getInstance().nextArgument();
+        }
+        
         if (StringUtils.isEmpty(importPath) || (!importPath.endsWith(".xlsx") && !importPath.endsWith(".xls"))) {
             logger.severe("No excel file found to import! Please define the full path to excel import file.");
             return;

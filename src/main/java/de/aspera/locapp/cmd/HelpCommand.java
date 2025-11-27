@@ -1,6 +1,15 @@
 package de.aspera.locapp.cmd;
 
-public class HelpCommand implements CommandRunnable {
+import picocli.CommandLine;
+import picocli.CommandLine.Command;
+
+@Command(
+    name = "help",
+    aliases = {"h"},
+    description = "Display help information about available commands.",
+    mixinStandardHelpOptions = true
+)
+public class HelpCommand implements CommandRunnable, Runnable {
 
     @Override
     public void run() {
@@ -9,14 +18,14 @@ public class HelpCommand implements CommandRunnable {
         System.out.println("\t(ip)import-properties: \t\t\tIterate known properties and save into database.");
         System.out.println("\t(ep)export-properties DIR: \t\tIterate known properties and save into directory.");
         System.out.println("\t(csvin)csv-import DIR: \t\t\tImport properties as CSV formatted file");
-        System.out.println("\t(ee)excel-export DIR [L] [EV]: \t\tExport properties into an excel file (all or by language ISOCODE[L], search for empty values [EV(empty values)=1])");
+        System.out.println("\t(ee)excel-export DIR [-l LANG] [-e]: \tExport properties into an excel file (all or by language ISOCODE[-l], search for empty values [-e])");
         System.out.println("\t(ei)excel-import DIR: \t\t\tImport properties from an excel file");
         System.out.println("\t(ed)export-delta DIR: \t\t\tExport delta (properties vs. excel) into an excel file");
         System.out.println("\t(id)import-delta DIR VERSION: \t\tImport delta and merge with selected version");
-        System.out.println("\t(sdl)select-default-language LANG: \tSet default language for excel export (LANG=[en,de...]).");
-        System.out.println("\t(pc)properties-count SRC|XLS [L] [EV]: \tCount the amount of properties (all or by language ISOCODE[L], search for empty values [EV(empty values)=1])");
+        System.out.println("\t(sdl)set-default-language LANG: \tSet default language for excel export (LANG=[en,de...]).");
+        System.out.println("\t(pc)properties-count SRC|XLS [-l L] [-e]: Count the amount of properties (all or by language ISOCODE[-l], search for empty values [-e])");
         System.out.println("\t(mp)merge-properties SRC|XLS: \t\tAll known properties will be merged with their latest version to a new data set.");
-        System.out.println("\t(ci)check-integrity [L]: \t\tCheck if all SRC properties provided by XLS properties with all or specified languages(all or by language ISOCODE[L]).");
+        System.out.println("\t(ci)check-integrity [-l L]: \t\tCheck if all SRC properties provided by XLS properties with all or specified languages(all or by language ISOCODE[-l]).");
         System.out.println("\t(cl)ear-loc: \t\t\t\tDelete all(!) entries for Localization!");
         System.out.println("\t(f)iles DIR: \t\t\t\tRead recursive down for properties files and save fileinfo.");
         System.out.println("\t(iil)import-ignore-list: \t\tImport list of files that are to be excluded from the translation process.");

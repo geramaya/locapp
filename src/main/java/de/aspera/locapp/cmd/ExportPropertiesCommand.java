@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -24,26 +25,54 @@ import de.aspera.locapp.dto.Localization;
 import de.aspera.locapp.dto.Localization.Status;
 import de.aspera.locapp.util.HelperUtil;
 
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Parameters;
+
 /**
  * This class export all property files into a directory.
  *
  * @author Daniel.Weiss
  *
  */
-public class ExportPropertiesCommand implements CommandRunnable {
+@Command(
+    name = "export-properties",
+    aliases = {"ep"},
+    description = "Iterate known properties and save into directory.",
+    mixinStandardHelpOptions = true
+)
+public class ExportPropertiesCommand implements CommandRunnable, Runnable {
 
 	private static final Logger logger = Logger.getLogger(ExportPropertiesCommand.class.getName());
 	private LocalizationDao locFacade = new LocalizationDao();
 	private List<Localization> allLocalizations;
 
+	@Parameters(index = "0", description = "Export directory path", arity = "0..1")
+	private Path exportDir;
+
 	@Override
-	public void run() throws CommandException {
-		exportPropertiesFiles();
+	public void run() {
+		try {
+			exportPropertiesFiles();
+		} catch (CommandException e) {
+			logger.log(Level.SEVERE, e.getMessage(), e);
+		}
+	}
+	
+	/**
+	 * Sets the export directory programmatically for testing or legacy support.
+	 */
+	public void setExportDir(Path exportDir) {
+		this.exportDir = exportDir;
 	}
 
 	private void exportPropertiesFiles() throws CommandException {
 		long start = System.currentTimeMillis();
-		String exportPath = CommandContext.getInstance().nextArgument();
+		String exportPath;
+		if (exportDir != null) {
+			exportPath = exportDir.toString();
+		} else {
+			exportPath = CommandContext.getInstance().nextArgument();
+		}
 
 		if (StringUtils.isEmpty(exportPath)) {
 			logger.warning("No export path found! Please define a export path.");

@@ -21,6 +21,8 @@ import de.aspera.locapp.dto.Localization;
 import de.aspera.locapp.dto.Localization.Status;
 import de.aspera.locapp.util.HelperUtil;
 
+import picocli.CommandLine.Command;
+
 /**
  * This class reads the all file informations about saved properties files
  * {@link FileInfo}. The command load all entries of a property file and save it
@@ -29,13 +31,23 @@ import de.aspera.locapp.util.HelperUtil;
  * @author Daniel.Weiss
  *
  */
-public class ImportPropertiesCommand implements CommandRunnable {
+@Command(
+    name = "import-properties",
+    aliases = {"ip"},
+    description = "Iterate known properties and save into database.",
+    mixinStandardHelpOptions = true
+)
+public class ImportPropertiesCommand implements CommandRunnable, Runnable {
 
 	private static final Logger logger = Logger.getLogger(ImportPropertiesCommand.class.getName());
 
 	@Override
-	public void run() throws CommandException {
-		importPropertiesFiles();
+	public void run() {
+		try {
+			importPropertiesFiles();
+		} catch (CommandException e) {
+			logger.log(Level.SEVERE, e.getMessage(), e);
+		}
 	}
 
 	private void importPropertiesFiles() throws CommandException {
