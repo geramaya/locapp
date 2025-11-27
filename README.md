@@ -7,9 +7,10 @@
 </div>
 
 ## Overview
-LocApp is a command line application that recursively scans a source root for `*.properties` files, normalizes and stores their key/value, path, locale and version information in an embedded H2 database. It then enables an iterative translation workflow using Excel export/import, delta comparisons and integrity checks. The data model tracks lifecycle states (source, exported, translated, verified, etc.) to support controlled evolution of localized resources.
+LocApp is a modern command line application that recursively scans a source root for `*.properties` files, normalizes and stores their key/value, path, locale and version information in an embedded H2 database. It then enables an iterative translation workflow using Excel export/import, delta comparisons and integrity checks. The data model tracks lifecycle states (source, exported, translated, verified, etc.) to support controlled evolution of localized resources.
 
 ## Key Features
+- **Modern Interactive CLI** with TAB completion powered by [Picocli](https://picocli.info/) and [JLine 3](https://github.com/jline/jline3)
 - Recursive discovery of property files (per language: `messages_de.properties`, `messages_en.properties`, ...)
 - Versioned storage of entries in embedded H2 (no external DB required)
 - Excel round‑trip: export for translators, reimport updates, highlight changes
@@ -22,12 +23,12 @@ LocApp is a command line application that recursively scans a source root for `*
 ## Technology Stack
 - Java 21+
 - Apache Maven (build)
+- **Picocli 4.7.6** – Modern CLI framework with annotation-based command parsing
+- **JLine 3.26.3** – Interactive terminal with TAB completion and command history
 - H2 Database (TCP server started locally for inspection if needed)
 - JPA (Jakarta Persistence) for entity management
-- Apache POI (currently HSSF / `.xls` format)
+- Apache POI 5.3.0 (XSSF / `.xlsx` format)
 - Apache Commons CSV / IO / Lang3 utilities
-
-> Note: The current Excel implementation uses `HSSFWorkbook` (legacy `.xls`). Migrating to `XSSFWorkbook` would enable larger sheets and modern Excel features.
 
 ## Data Model
 `Localization` entity fields:
@@ -46,27 +47,36 @@ Each (key + fileName + fullPath + status + version) tuple is unique, allowing hi
 9. Housekeeping: `import-ignore-list`, `clear-ignore-list`, `clear-loc`
 
 ## Command Reference
+
+All commands support the `--help` option to display usage information. Commands can be invoked using either the full name or the short alias.
+
 | Shortcut | Command | Parameters | Description |
 |----------|---------|------------|-------------|
 | q | quit | – | Quit program |
 | h | help | – | Show help text |
-| f | files | `DIR` | Recursively scan for `.properties` files |
+| f | files | `<DIR>` | Recursively scan for `.properties` files |
 | ip | import-properties | – | Import discovered properties into DB (status=SRC) |
-| ee | excel-export | `DIR [LANG] [E]` | Export properties to Excel (filter by language / empty values) |
-| ei | excel-import | `DIR` | Import Excel modifications (status=XLS) |
-| ed | export-delta | `DIR` | Export only changed/empty cells to Excel |
-| id | import-delta | `DIR VERSION` | Import a delta sheet merging against a chosen version |
-| sdl | set-default-language | `LANG` | Set default language column ordering |
-| pc | properties-count | `SRC|XLS [LANG] [E]` | Count entries (optionally per language / empty) |
-| mp | merge-properties | `SRC|XLS` | Merge latest versions into new dataset |
-| ci | check-integrity | `[LANG]` | Validate all source keys covered in XLS version(s) |
+| ee | excel-export | `<DIR> [-l LANG] [-e]` | Export properties to Excel (filter by language / empty values) |
+| ei | excel-import | `<DIR>` | Import Excel modifications (status=XLS) |
+| ep | export-properties | `<DIR>` | Export properties to directory |
+| i | init | – | Initialize configuration |
+| ed | export-delta | `<DIR>` | Export only changed/empty cells to Excel |
+| id | import-delta | `<DIR> <VERSION>` | Import a delta sheet merging against a chosen version |
+| sdl | set-default-language | `<LANG>` | Set default language column ordering |
+| pc | properties-count | `<SRC\|XLS> [-l LANG] [-e]` | Count entries (optionally per language / empty) |
+| mp | merge-properties | `<SRC\|XLS>` | Merge latest versions into new dataset |
+| ci | check-integrity | `[-l LANG]` | Validate all source keys covered in XLS version(s) |
 | cl | clear-loc | – | Delete ALL localization entries (dangerous) |
-| iil | import-ignore-list | – | Import file list to ignore |
+| iil | import-ignore-list | `<FILE>` | Import file list to ignore |
 | cil | clear-ignore-list | – | Remove all ignored entries |
-| csvin | csv-import | – | Import from CSV source (status=CSV) |
-| cscmig | cscmig | – | Specialized CSV migration command |
+| csvin | csv-import | `<FILE>` | Import from CSV source (status=CSV) |
+| cscmig | cscmig | `<FILE>` | Specialized CSV migration command |
 
-Parameters without brackets are mandatory; within brackets optional.
+### Command Options
+- `-l, --language` – Filter by language ISO code (e.g., `de`, `en`, `fr`)
+- `-e, --empty` – Filter/export only empty properties
+- `-h, --help` – Display help for any command
+- `-V, --version` – Display version information
 
 ## Installation
 ```bash
@@ -83,17 +93,37 @@ java -jar target/locapp-<version>-jar-with-dependencies.jar
 ```
 On startup LocApp:
 1. Prints splash banner
-2. Registers commands (`CommandContext`) and runs initial setup (`init`)
+2. Initializes Picocli command framework and JLine terminal
 3. Starts H2 TCP server + JPA (`H2DatabaseManager`)
-4. Enters recursive CLI loop
+4. Enters interactive CLI loop with TAB completion
+
+### Interactive Shell Features
+- **TAB Completion**: Press TAB to autocomplete command names and options
+- **Command History**: Use arrow keys to navigate through previous commands
+- **Graceful Exit**: Use `quit`, `q`, or Ctrl+D to exit; Ctrl+C shows exit hint
 
 ### Example Session
 ```text
 >> command: files /path/to/project/src/main/resources
 >> command: import-properties
->> command: excel-export ./export en 1
+>> command: excel-export ./export -l en -e
 >> command: excel-import ./export
->> command: check-integrity en
+>> command: check-integrity -l en
+```
+
+### New Command Syntax Examples
+```bash
+# Export Excel with language filter and empty properties only
+excel-export /tmp/export --language de --empty
+
+# Or using short options
+ee /tmp/export -l de -e
+
+# Count properties with options
+properties-count SRC --language fr --empty
+
+# Check integrity for specific language
+check-integrity --language en
 ```
 
 ## Configuration & Storage
@@ -118,13 +148,28 @@ mvn test
 Test reports: `target/surefire-reports/`.
 
 ## Development Notes
-- Commands are registered centrally in `CommandContext` (shortcut + full name).
-- Lifecycle is driven by `MainStart` (splash → help → init → CLI loop).
-- `LocalizationDao` provides filtered queries (by status, version, locale, empties, path) and ignore‑list filtering.
-- Status transitions are implicit through import/export commands.
+- **CLI Framework**: Commands use Picocli annotations (`@Command`, `@Parameters`, `@Option`) for declarative parsing
+- **Root Command**: `LocAppCLI.java` registers all subcommands with aliases for backward compatibility
+- **Interactive Shell**: `MainStart.java` integrates JLine 3 for terminal handling with `StringsCompleter` for TAB completion
+- **Backward Compatibility**: Commands implement both `CommandRunnable` (legacy) and `Runnable` (Picocli) interfaces
+- Legacy `CommandContext` is still available for gradual migration
+- `LocalizationDao` provides filtered queries (by status, version, locale, empties, path) and ignore‑list filtering
+- Status transitions are implicit through import/export commands
+
+### Architecture Overview
+```
+MainStart.java          → Application entry point, JLine terminal setup
+    ↓
+LocAppCLI.java         → Picocli root command, registers all subcommands
+    ↓
+*Command.java          → Individual commands with @Command annotations
+    ↓
+CommandContext.java    → Legacy command registry (backward compatibility)
+```
 
 ## Roadmap Ideas
-- Switch to `XSSFWorkbook` for `.xlsx` support
+- ~~Switch to `XSSFWorkbook` for `.xlsx` support~~ ✅ Done
+- ~~Modern CLI with TAB completion~~ ✅ Done (Picocli + JLine 3)
 - Introduce structured logging (SLF4J) & log configuration
 - Add unit tests for individual command classes
 - Provide JSON/REST API wrapper for CI automation
