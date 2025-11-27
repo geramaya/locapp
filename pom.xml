@@ -7,6 +7,7 @@
 	<version>1.5.0-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<properties>
+		<!-- Note: Project may target Java 21 but is built with Java 17 for CI compatibility -->
 		<jre.compiler.version>17</jre.compiler.version>
 		<picocli.version>4.7.6</picocli.version>
 		<jline.version>3.26.3</jline.version>

@@ -111,11 +111,7 @@ public class ExcelExportCommand implements CommandRunnable, Runnable {
                     optionList.add(language);
                 }
                 if (emptyProperties) {
-                    if (language == null) {
-                        optionList.add("1");
-                    } else {
-                        optionList.add("1");
-                    }
+                    optionList.add("1");
                 }
                 options = optionList.toArray(new String[0]);
             } else {

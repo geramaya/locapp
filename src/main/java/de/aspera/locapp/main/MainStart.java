@@ -165,7 +165,10 @@ public class MainStart {
     /**
      * Legacy CLI mode using Scanner for environments where JLine may not work.
      */
+    @SuppressWarnings("resource")
     private static void promptCLILegacy() {
+        // Scanner wrapping System.in should not be closed as it would close System.in
+        // which is a system resource that should remain open for the application lifetime
         java.util.Scanner scanner = new java.util.Scanner(System.in);
         while (true) {
             System.out.print("\n>> command: ");
