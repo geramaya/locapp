@@ -17,7 +17,7 @@ public class ExcelImportCommandTest extends BasicFacadeTest {
         CMDCTX.addArgument("cl");
         CMDCTX.executeCommand(CMDCTX.nextArgument());
         CMDCTX.addArgument("ei");
-        String file = ExcelImportCommandTest.class.getClassLoader().getResource("slc_excel_export.xls").getFile();
+        String file = ExcelImportCommandTest.class.getClassLoader().getResource("slc_excel_export.xlsx").getFile();
         CMDCTX.addArgument(file);
         CMDCTX.executeCommand(CMDCTX.nextArgument());
 

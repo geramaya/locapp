@@ -19,7 +19,7 @@ public class MergeCommandTest extends BasicFacadeTest {
         CMDCTX.addArgument("cl");
         CMDCTX.executeCommand(CMDCTX.nextArgument());
 
-        String[] files = new String[]{"export_all_edit.xls", "export_de_edit.xls", "export_it_edit.xls"};
+        String[] files = new String[]{"export_all_edit.xlsx", "export_de_edit.xlsx", "export_it_edit.xlsx"};
         for (String file : files) {
             CMDCTX.addArgument("ei");
             String filePath = ExcelImportCommandTest.class.getClassLoader().getResource(file).getFile();

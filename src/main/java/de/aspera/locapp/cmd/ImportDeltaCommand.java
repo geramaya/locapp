@@ -19,12 +19,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.poi.hssf.usermodel.HSSFDateUtil;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
 
 import de.aspera.locapp.dao.DatabaseException;
 import de.aspera.locapp.dao.LocalizationDao;
@@ -72,7 +72,7 @@ public class ImportDeltaCommand implements CommandRunnable {
     }
 
     private boolean invalidPath(String importPath) {
-        if (StringUtils.isEmpty(importPath) || !StringUtils.endsWith(importPath, ".xls")) {
+        if (StringUtils.isEmpty(importPath) || (!StringUtils.endsWith(importPath, ".xlsx") && !StringUtils.endsWith(importPath, ".xls"))) {
             LOGGER.severe("No excel file found to import! Please define the full path to excel import file.");
             return true;
         }
@@ -93,7 +93,7 @@ public class ImportDeltaCommand implements CommandRunnable {
             throws IOException, DatabaseException {
         List<Localization> importLocs = new ArrayList<>();
         FileInputStream excelFile = new FileInputStream(new File(importPath));
-        Workbook workbook = new HSSFWorkbook(excelFile);
+        Workbook workbook = WorkbookFactory.create(excelFile);
         Sheet datatypeSheet = workbook.getSheetAt(0);
         Iterator<Row> iterator = datatypeSheet.iterator();
 
@@ -222,11 +222,11 @@ public class ImportDeltaCommand implements CommandRunnable {
 
     private String getStringValue(Cell cell) {
         if (cell != null) {
-            switch (cell.getCellTypeEnum()) {
+            switch (cell.getCellType()) {
             case BOOLEAN:
                 return cell.getBooleanCellValue() ? "true" : "false";
             case NUMERIC:
-                if (HSSFDateUtil.isCellDateFormatted(cell) && cell.getDateCellValue() != null) {
+                if (DateUtil.isCellDateFormatted(cell) && cell.getDateCellValue() != null) {
                     return Long.toString(cell.getDateCellValue().getTime());
                 }
                 return getStringFrom(cell.getNumericCellValue());

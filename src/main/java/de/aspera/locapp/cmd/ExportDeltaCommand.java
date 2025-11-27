@@ -62,7 +62,7 @@ public class ExportDeltaCommand implements CommandRunnable {
         List<String> sheetNames = new ArrayList<>();
         List<String> headers;
         String exportPath = CommandContext.getInstance().nextArgument();
-        String fileName = HelperUtil.currentTimestamp() + "-delta.xls";
+        String fileName = HelperUtil.currentTimestamp() + "-delta.xlsx";
 
         exportPath += SystemUtils.IS_OS_WINDOWS ? "\\" : "/";
 

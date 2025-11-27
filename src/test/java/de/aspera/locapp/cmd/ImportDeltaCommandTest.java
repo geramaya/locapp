@@ -10,10 +10,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -34,7 +34,7 @@ public class ImportDeltaCommandTest extends BasicFacadeTest {
     public void init() throws InstantiationException, IllegalAccessException, DatabaseException, IOException, CommandException {
 
         String testfiles = ExcelExportCommandTest.class.getClassLoader().getResource("deltatest").getFile();
-        String xlsfile = ExcelImportCommandTest.class.getClassLoader().getResource("slc_excel_to_import.xls").getFile();
+        String xlsfile = ExcelImportCommandTest.class.getClassLoader().getResource("slc_excel_to_import.xlsx").getFile();
         locaFacade = new LocalizationDao();
 
         CMDCTX.addArgument("init");
@@ -111,7 +111,7 @@ public class ImportDeltaCommandTest extends BasicFacadeTest {
 
     private void updateFullPath(String xlsPath) throws IOException, DatabaseException {
         FileInputStream file = new FileInputStream(xlsPath);
-        Workbook wb = new HSSFWorkbook(file);
+        Workbook wb = WorkbookFactory.create(file);
         Sheet sheet = wb.getSheetAt(0);
         Iterator<Row> rows = sheet.iterator();
         LocalizationDao locaFacade = new LocalizationDao();
@@ -140,7 +140,7 @@ public class ImportDeltaCommandTest extends BasicFacadeTest {
         File dir = new File("target/test-classes/deltatest");
         if (dir.isDirectory()) {
             for (File file : dir.listFiles()) {
-                if (file.getName().endsWith("delta.xls")) {
+                if (file.getName().endsWith("delta.xlsx")) {
                     return file.getName();
                 }
             }
