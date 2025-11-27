@@ -1,6 +1,14 @@
 package de.aspera.locapp.cmd;
 
-public class QuitCommand implements CommandRunnable {
+import picocli.CommandLine.Command;
+
+@Command(
+    name = "quit",
+    aliases = {"q"},
+    description = "Quit the program.",
+    mixinStandardHelpOptions = true
+)
+public class QuitCommand implements CommandRunnable, Runnable {
 
     @Override
     public void run() {

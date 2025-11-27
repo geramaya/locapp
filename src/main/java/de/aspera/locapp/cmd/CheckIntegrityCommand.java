@@ -11,18 +11,41 @@ import de.aspera.locapp.dao.LocalizationDao;
 import de.aspera.locapp.dto.Localization;
 import de.aspera.locapp.dto.Localization.Status;
 
-public class CheckIntegrityCommand implements CommandRunnable {
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Option;
+
+@Command(
+    name = "check-integrity",
+    aliases = {"ci"},
+    description = "Check if all SRC properties provided by XLS properties with all or specified languages.",
+    mixinStandardHelpOptions = true
+)
+public class CheckIntegrityCommand implements CommandRunnable, Runnable {
 
     private static final Logger logger = Logger.getLogger(CheckIntegrityCommand.class.getName());
     private LocalizationDao locFacade = new LocalizationDao();
 
+    @Option(names = {"-l", "--language"}, description = "Language ISO code (e.g., de, en, fr)")
+    private String language;
+
     @Override
     public void run() {
         try {
-            checkIntegrityProperties(CommandContext.getInstance().allArguments());
+            if (language != null) {
+                checkIntegrityProperties(language);
+            } else {
+                checkIntegrityProperties(CommandContext.getInstance().allArguments());
+            }
         } catch (Exception e) {
             logger.log(Level.SEVERE, e.getMessage(), e);
         }
+    }
+    
+    /**
+     * Sets the language programmatically for testing or legacy support.
+     */
+    public void setLanguage(String language) {
+        this.language = language;
     }
 
     private void checkIntegrityProperties(String... options) throws DatabaseException {

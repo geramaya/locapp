@@ -6,6 +6,7 @@ package de.aspera.locapp.cmd;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -31,32 +32,70 @@ import de.aspera.locapp.dao.LocalizationDao;
 import de.aspera.locapp.dto.Localization;
 import de.aspera.locapp.dto.Localization.Status;
 
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Parameters;
+
 /**
  * @author Bjoern.Buchholz
  *
  */
-public class ImportDeltaCommand implements CommandRunnable {
+@Command(
+    name = "import-delta",
+    aliases = {"id"},
+    description = "Import delta and merge with selected version.",
+    mixinStandardHelpOptions = true
+)
+public class ImportDeltaCommand implements CommandRunnable, Runnable {
     private static final int COL_KEY = 2;
     private static final Logger LOGGER = Logger.getLogger(ExportDeltaCommand.class.getName());
 
     private LocalizationDao locaFacade = new LocalizationDao();
     private Map<String, Integer> languagePositonMap = new HashMap<>();
 
+    @Parameters(index = "0", description = "Path to the Excel delta file", arity = "0..1")
+    private Path importFile;
+
+    @Parameters(index = "1", description = "Version number to merge with", arity = "0..1")
+    private String version;
+
     @Override
-    public void run() throws CommandException {
+    public void run() {
         try {
             long start = System.currentTimeMillis();
             doImport();
             long end = System.currentTimeMillis() - start;
             LOGGER.log(Level.INFO, "Import Excel Delta file in ms: " + end);
-        } catch (DatabaseException | IOException e) {
+        } catch (DatabaseException | IOException | CommandException e) {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
         }
     }
+    
+    /**
+     * Sets the import file programmatically for testing or legacy support.
+     */
+    public void setImportFile(Path importFile) {
+        this.importFile = importFile;
+    }
+    
+    /**
+     * Sets the version programmatically for testing or legacy support.
+     */
+    public void setVersion(String version) {
+        this.version = version;
+    }
 
     private void doImport() throws DatabaseException, IOException, CommandException {
-        String importPath = CommandContext.getInstance().nextArgument();
-        String lastVersionStr = CommandContext.getInstance().nextArgument();
+        String importPath;
+        String lastVersionStr;
+        
+        if (importFile != null) {
+            importPath = importFile.toString();
+            lastVersionStr = version;
+        } else {
+            importPath = CommandContext.getInstance().nextArgument();
+            lastVersionStr = CommandContext.getInstance().nextArgument();
+        }
+        
         int lastVersion = 0;
 
         if (!invalidPath(importPath)) {

@@ -3,6 +3,7 @@ package de.aspera.locapp.cmd;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -34,7 +35,17 @@ import de.aspera.locapp.dto.Localization;
 import de.aspera.locapp.dto.Localization.Status;
 import de.aspera.locapp.util.HelperUtil;
 
-public class ExcelExportCommand implements CommandRunnable {
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Option;
+import picocli.CommandLine.Parameters;
+
+@Command(
+    name = "excel-export",
+    aliases = {"ee"},
+    description = "Export properties into an excel file (all or by language ISOCODE, search for empty values).",
+    mixinStandardHelpOptions = true
+)
+public class ExcelExportCommand implements CommandRunnable, Runnable {
 
     private static final String    HEADER        = "header";
     private static final String    STYLE_YELLOW  = "style_yellow";
@@ -44,6 +55,15 @@ public class ExcelExportCommand implements CommandRunnable {
     private ConfigDao           configFacade  = new ConfigDao();
     private Map<String, CellStyle> styleMap      = new HashMap<>();
     private String                 fileName;
+
+    @Parameters(index = "0", description = "Export directory path", arity = "0..1")
+    private Path exportPath;
+
+    @Option(names = {"-l", "--language"}, description = "Language ISO code (e.g., de, en, fr)")
+    private String language;
+
+    @Option(names = {"-e", "--empty"}, description = "Export only empty properties", defaultValue = "false")
+    private boolean emptyProperties;
 
     public void initStyles(Workbook wb) {
         CellStyle header = wb.createCellStyle();
@@ -80,12 +100,56 @@ public class ExcelExportCommand implements CommandRunnable {
     public void run() {
         try {
             long start = System.currentTimeMillis();
-            doExport(CommandContext.getInstance().allArguments());
+            
+            // Handle Picocli parameters or fall back to legacy CommandContext
+            String[] options;
+            if (exportPath != null) {
+                // Using Picocli parameters
+                List<String> optionList = new ArrayList<>();
+                optionList.add(exportPath.toString());
+                if (language != null) {
+                    optionList.add(language);
+                }
+                if (emptyProperties) {
+                    if (language == null) {
+                        optionList.add("1");
+                    } else {
+                        optionList.add("1");
+                    }
+                }
+                options = optionList.toArray(new String[0]);
+            } else {
+                // Legacy support: use CommandContext
+                options = CommandContext.getInstance().allArguments();
+            }
+            
+            doExport(options);
             long end = System.currentTimeMillis() - start;
             logger.log(Level.INFO, "Export Excel file in ms: " + end);
         } catch (IOException | DatabaseException e) {
             logger.log(Level.SEVERE, e.getMessage(), e);
         }
+    }
+    
+    /**
+     * Sets the export path programmatically for testing or legacy support.
+     */
+    public void setExportPath(Path exportPath) {
+        this.exportPath = exportPath;
+    }
+    
+    /**
+     * Sets the language programmatically for testing or legacy support.
+     */
+    public void setLanguage(String language) {
+        this.language = language;
+    }
+    
+    /**
+     * Sets the empty properties flag programmatically for testing or legacy support.
+     */
+    public void setEmptyProperties(boolean emptyProperties) {
+        this.emptyProperties = emptyProperties;
     }
 
     private void doExport(String... options) throws IOException, DatabaseException {

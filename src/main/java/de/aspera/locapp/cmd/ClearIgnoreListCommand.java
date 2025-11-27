@@ -6,7 +6,15 @@ import java.util.logging.Logger;
 import de.aspera.locapp.dao.DatabaseException;
 import de.aspera.locapp.dao.IgnoredItemDao;
 
-public class ClearIgnoreListCommand implements CommandRunnable {
+import picocli.CommandLine.Command;
+
+@Command(
+    name = "clear-ignore-list",
+    aliases = {"cil"},
+    description = "Clear list with ignored files.",
+    mixinStandardHelpOptions = true
+)
+public class ClearIgnoreListCommand implements CommandRunnable, Runnable {
     private static final Logger logger = Logger.getLogger(ClearIgnoreListCommand.class.getName());
 
     @Override

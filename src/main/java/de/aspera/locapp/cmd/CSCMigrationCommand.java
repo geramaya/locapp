@@ -3,6 +3,7 @@ package de.aspera.locapp.cmd;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -25,26 +26,49 @@ import de.aspera.locapp.dto.Localization;
 import de.aspera.locapp.dto.Localization.Status;
 import de.aspera.locapp.util.HelperUtil;
 
-public class CSCMigrationCommand implements CommandRunnable {
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Parameters;
+
+@Command(
+    name = "cscmig",
+    description = "CSC Migration command - Import CSV file for CSC migration.",
+    mixinStandardHelpOptions = true
+)
+public class CSCMigrationCommand implements CommandRunnable, Runnable {
 
 	private static final Logger logger = Logger.getLogger(CSCMigrationCommand.class.getName());
 	private LocalizationDao locFacade = new LocalizationDao();
 
+	@Parameters(index = "0", description = "Path to the CSV file for CSC migration", arity = "0..1")
+	private Path csvFile;
+
 	@Override
-	public void run() throws CommandException {
+	public void run() {
 		try {
 			long start = System.currentTimeMillis();
 			importCSV();
 			long end = System.currentTimeMillis() - start;
 			logger.log(Level.INFO, "Import Excel file in ms: " + end);
 		} catch (Exception exp) {
-			throw new CommandException(exp.getMessage(), exp);
+			logger.log(Level.SEVERE, exp.getMessage(), exp);
 		}
-
+	}
+	
+	/**
+	 * Sets the CSV file programmatically for testing or legacy support.
+	 */
+	public void setCsvFile(Path csvFile) {
+		this.csvFile = csvFile;
 	}
 
 	private void importCSV() throws DatabaseException {
-		String importPath = CommandContext.getInstance().nextArgument();
+		String importPath;
+		if (csvFile != null) {
+			importPath = csvFile.toString();
+		} else {
+			importPath = CommandContext.getInstance().nextArgument();
+		}
+		
 		if (StringUtils.isEmpty(importPath) || !FileUtils.getFile(importPath).exists()) {
 			logger.severe("No csv file found to import! Please define the full path to csv import file.");
 			return;
