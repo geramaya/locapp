@@ -105,5 +105,8 @@ public class CommandContext {
         addCommand("csv-import", CSVImportCommand.class);
         addCommand("csvin", CSVImportCommand.class);
         addCommand("cscmig", CSCMigrationCommand.class);
+        addCommand("search", SearchCommand.class);
+        addCommand("s", SearchCommand.class);
+        addCommand("find", SearchCommand.class);
     }
 }
