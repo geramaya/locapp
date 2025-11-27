@@ -16,18 +16,16 @@ import java.util.logging.Logger;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
-import org.apache.poi.hssf.usermodel.HSSFCellStyle;
-import org.apache.poi.hssf.usermodel.HSSFFont;
-import org.apache.poi.hssf.usermodel.HSSFPalette;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.hssf.util.HSSFColor;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.FillPatternType;
 import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
+import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import de.aspera.locapp.dao.ConfigDao;
 import de.aspera.locapp.dao.DatabaseException;
@@ -47,24 +45,22 @@ public class ExcelExportCommand implements CommandRunnable {
     private Map<String, CellStyle> styleMap      = new HashMap<>();
     private String                 fileName;
 
-    public void initStyles(HSSFWorkbook wb) {
-        HSSFPalette palette = wb.getCustomPalette();
+    public void initStyles(Workbook wb) {
         CellStyle header = wb.createCellStyle();
-        palette.setColorAtIndex(HSSFColor.GREY_25_PERCENT.index, (byte) 217, (byte) 217, (byte) 217);
-        header.setFillForegroundColor(HSSFColor.GREY_25_PERCENT.index);
+        header.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
         header.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         Font font_header = wb.createFont();
         font_header.setBold(true);
-        font_header.setColor(HSSFColor.BLACK.index);
+        font_header.setColor(IndexedColors.BLACK.getIndex());
         header.setFont(font_header);
         header.setAlignment(HorizontalAlignment.CENTER);
 
         CellStyle style_yellow = wb.createCellStyle();
-        style_yellow.setFillForegroundColor(HSSFColor.YELLOW.index);
+        style_yellow.setFillForegroundColor(IndexedColors.YELLOW.getIndex());
         style_yellow.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         Font font_green = wb.createFont();
         font_green.setBold(true);
-        font_green.setColor(HSSFColor.GREEN.index);
+        font_green.setColor(IndexedColors.GREEN.getIndex());
         style_yellow.setFont(font_green);
         style_yellow.setAlignment(HorizontalAlignment.LEFT);
 
@@ -119,9 +115,9 @@ public class ExcelExportCommand implements CommandRunnable {
         }
 
         if (language != null) {
-            fileName = HelperUtil.currentTimestamp() + "-export-" + language + ".xls";
+            fileName = HelperUtil.currentTimestamp() + "-export-" + language + ".xlsx";
         } else {
-            fileName = HelperUtil.currentTimestamp() + "-export-all.xls";
+            fileName = HelperUtil.currentTimestamp() + "-export-all.xlsx";
         }
         
         Locale defaultLocale = Locale.ENGLISH;
@@ -137,7 +133,7 @@ public class ExcelExportCommand implements CommandRunnable {
         exportPath += SystemUtils.IS_OS_WINDOWS ? "\\" : "/";
         int rowcount = ROWGAP_HEADER;
 
-        HSSFWorkbook wb = new HSSFWorkbook();
+        Workbook wb = new XSSFWorkbook();
         initStyles(wb);
         Sheet sheet = wb.createSheet("SLC Properties");
         List<Sheet> sheets = new ArrayList<>();

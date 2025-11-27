@@ -17,7 +17,7 @@ public class ExportPropertiesCommandTest extends BasicFacadeTest {
         CMDCTX.executeCommand(CMDCTX.nextArgument());
 
         CMDCTX.addArgument("ei");
-        String file = ExportPropertiesCommandTest.class.getClassLoader().getResource("slc_excel_export.xls").getFile();
+        String file = ExportPropertiesCommandTest.class.getClassLoader().getResource("slc_excel_export.xlsx").getFile();
         CMDCTX.addArgument(file);
         CMDCTX.executeCommand(CMDCTX.nextArgument());
 
