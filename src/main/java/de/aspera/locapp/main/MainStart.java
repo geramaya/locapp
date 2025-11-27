@@ -105,11 +105,13 @@ public class MainStart {
                 "set-default-language", "sdl",
                 "csv-import", "csvin",
                 "cscmig",
+                "search", "s", "find",
                 // Common options
                 "--help", "-h",
                 "--version", "-V",
                 "--language", "-l",
-                "--empty", "-e"
+                "--empty", "-e",
+                "--all", "-a"
             );
             
             // Build LineReader with completer for TAB completion
