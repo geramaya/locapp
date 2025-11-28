@@ -113,9 +113,7 @@ public class ExcelImportCommand implements CommandRunnable, Runnable {
                             : HelperUtil.replaceFullPath(fullPath, language));
                     loc.setVersion(lastVersion);
                     loc.setStatus(Localization.Status.XLS);
-                    if (!loc.getValue().equals(EMPTY_VALUE)) {
-                        importLocs.add(loc);
-                    }
+                    importLocs.add(loc);
                 }
             }
         }

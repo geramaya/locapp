@@ -275,6 +275,68 @@ public class FullRoundtripIntegrationTest extends BasicFacadeTest {
     }
 
     /**
+     * Test that verifies SRC COUNT == XLS COUNT after a full roundtrip.
+     * This specifically tests the fix for the Excel import issue where
+     * entries with empty or unchanged values were incorrectly filtered out.
+     * 
+     * After export and re-import, the number of XLS entries for each language
+     * should match the number of SRC entries for English (the base language).
+     */
+    @Test
+    public void testRoundtripPreservesAllEntries() throws Exception {
+        // Get the SRC count for English (base language)
+        int srcVersion = locFacade.lastVersion(Status.SRC);
+        List<Localization> srcLocalizations = locFacade.getLocalizations(srcVersion, Status.SRC, false, null);
+        
+        // Count English entries as the reference
+        long englishSrcCount = srcLocalizations.stream()
+                .filter(loc -> "en".equals(loc.getLocale()))
+                .count();
+        
+        logger.info("SRC English count: " + englishSrcCount);
+        
+        // Step 1: Export to XLSX
+        String exportDir = tempBasePath.toString();
+        CMDCTX.addArgument("ee");
+        CMDCTX.addArgument(exportDir);
+        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        
+        File xlsxFile = findExportedFile(exportDir, "-export-all.xlsx");
+        Assert.assertNotNull("Exported .xlsx file should exist", xlsxFile);
+        
+        // Step 2: Re-Import the Excel (without any modifications)
+        CMDCTX.addArgument("ei");
+        CMDCTX.addArgument(xlsxFile.getAbsolutePath());
+        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        
+        // Step 3: Verify XLS counts match SRC counts for all languages
+        int xlsVersion = locFacade.lastVersion(Status.XLS);
+        List<Localization> xlsLocalizations = locFacade.getLocalizations(xlsVersion, Status.XLS, false, null);
+        
+        // Count entries per language
+        long englishXlsCount = xlsLocalizations.stream()
+                .filter(loc -> "en".equals(loc.getLocale()))
+                .count();
+        long germanXlsCount = xlsLocalizations.stream()
+                .filter(loc -> "de".equals(loc.getLocale()))
+                .count();
+        long frenchXlsCount = xlsLocalizations.stream()
+                .filter(loc -> "fr".equals(loc.getLocale()))
+                .count();
+        
+        logger.info("XLS English count: " + englishXlsCount);
+        logger.info("XLS German count: " + germanXlsCount);
+        logger.info("XLS French count: " + frenchXlsCount);
+        
+        // Verify: XLS count for each language should equal SRC English count
+        Assert.assertEquals("English XLS count should equal SRC count", englishSrcCount, englishXlsCount);
+        Assert.assertEquals("German XLS count should equal SRC count", englishSrcCount, germanXlsCount);
+        Assert.assertEquals("French XLS count should equal SRC count", englishSrcCount, frenchXlsCount);
+        
+        logger.info("Roundtrip integrity test PASSED - all counts match!");
+    }
+
+    /**
      * Helper method to find the most recently created export file.
      */
     private File findExportedFile(String directory, String suffix) {
