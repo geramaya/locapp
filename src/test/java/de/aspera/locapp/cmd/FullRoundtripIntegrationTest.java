@@ -275,6 +275,198 @@ public class FullRoundtripIntegrationTest extends BasicFacadeTest {
     }
 
     /**
+     * Test that verifies SRC COUNT == XLS COUNT after a full roundtrip.
+     * This specifically tests the fix for the Excel import issue where
+     * entries with empty or unchanged values were incorrectly filtered out.
+     * 
+     * After export and re-import, the number of XLS entries for each language
+     * should match the number of SRC entries for English (the base language).
+     */
+    @Test
+    public void testRoundtripPreservesAllEntries() throws Exception {
+        // Get the SRC count for English (base language)
+        int srcVersion = locFacade.lastVersion(Status.SRC);
+        List<Localization> srcLocalizations = locFacade.getLocalizations(srcVersion, Status.SRC, false, null);
+        
+        // Count English entries as the reference
+        long englishSrcCount = srcLocalizations.stream()
+                .filter(loc -> "en".equals(loc.getLocale()))
+                .count();
+        
+        logger.info("SRC English count: " + englishSrcCount);
+        
+        // Step 1: Export to XLSX
+        String exportDir = tempBasePath.toString();
+        CMDCTX.addArgument("ee");
+        CMDCTX.addArgument(exportDir);
+        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        
+        File xlsxFile = findExportedFile(exportDir, "-export-all.xlsx");
+        Assert.assertNotNull("Exported .xlsx file should exist", xlsxFile);
+        
+        // Step 2: Re-Import the Excel (without any modifications)
+        CMDCTX.addArgument("ei");
+        CMDCTX.addArgument(xlsxFile.getAbsolutePath());
+        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        
+        // Step 3: Verify XLS counts match SRC counts for all languages
+        int xlsVersion = locFacade.lastVersion(Status.XLS);
+        List<Localization> xlsLocalizations = locFacade.getLocalizations(xlsVersion, Status.XLS, false, null);
+        
+        // Count entries per language
+        long englishXlsCount = xlsLocalizations.stream()
+                .filter(loc -> "en".equals(loc.getLocale()))
+                .count();
+        long germanXlsCount = xlsLocalizations.stream()
+                .filter(loc -> "de".equals(loc.getLocale()))
+                .count();
+        long frenchXlsCount = xlsLocalizations.stream()
+                .filter(loc -> "fr".equals(loc.getLocale()))
+                .count();
+        
+        logger.info("XLS English count: " + englishXlsCount);
+        logger.info("XLS German count: " + germanXlsCount);
+        logger.info("XLS French count: " + frenchXlsCount);
+        
+        // Verify: XLS count for each language should equal SRC English count
+        Assert.assertEquals("English XLS count should equal SRC count", englishSrcCount, englishXlsCount);
+        Assert.assertEquals("German XLS count should equal SRC count", englishSrcCount, germanXlsCount);
+        Assert.assertEquals("French XLS count should equal SRC count", englishSrcCount, frenchXlsCount);
+        
+        logger.info("Roundtrip integrity test PASSED - all counts match!");
+    }
+
+    /**
+     * Test A: MERGE/Inheritance Verification
+     * 
+     * Verifies that a partial import does not cause data loss.
+     * This tests the MERGE strategy where:
+     * 1. Initial XLS v1 contains a full set of keys
+     * 2. Partial Excel is imported (with only some keys)
+     * 3. New XLS v2 must contain ALL keys (inherited from v1 + updated from partial Excel)
+     */
+    @Test
+    public void testMergeInheritancePreservesData() throws Exception {
+        // Step 1: Export full SRC data to XLSX
+        String exportDir = tempBasePath.toString();
+        logger.info("Step 1: Exporting full data to XLSX...");
+        CMDCTX.addArgument("ee");
+        CMDCTX.addArgument(exportDir);
+        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        
+        File fullExcelFile = findExportedFile(exportDir, "-export-all.xlsx");
+        Assert.assertNotNull("Exported .xlsx file should exist", fullExcelFile);
+        
+        // Get the total count of SRC English entries as reference
+        int srcVersion = locFacade.lastVersion(Status.SRC);
+        List<Localization> srcLocalizations = locFacade.getLocalizations(srcVersion, Status.SRC, false, null);
+        long totalEnglishCount = srcLocalizations.stream()
+                .filter(loc -> "en".equals(loc.getLocale()))
+                .count();
+        logger.info("Total SRC English count: " + totalEnglishCount);
+        
+        // Step 2: Import full Excel to create XLS v1
+        logger.info("Step 2: Importing full Excel to create XLS v1...");
+        CMDCTX.addArgument("ei");
+        CMDCTX.addArgument(fullExcelFile.getAbsolutePath());
+        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        
+        int xlsV1 = locFacade.lastVersion(Status.XLS);
+        List<Localization> xlsV1Locs = locFacade.getLocalizations(xlsV1, Status.XLS, false, null);
+        long xlsV1EnglishCount = xlsV1Locs.stream()
+                .filter(loc -> "en".equals(loc.getLocale()))
+                .count();
+        logger.info("XLS v1 English count: " + xlsV1EnglishCount);
+        
+        // Step 3: Create a partial Excel containing only a SUBSET of keys (simulate partial translator work)
+        File partialExcelFile = createPartialExcel(fullExcelFile, 10); // Keep only first 10 data rows
+        logger.info("Step 3: Created partial Excel with subset of keys...");
+        
+        // Step 4: Import partial Excel - this should MERGE with XLS v1
+        logger.info("Step 4: Importing partial Excel (should MERGE with XLS v1)...");
+        CMDCTX.addArgument("ei");
+        CMDCTX.addArgument(partialExcelFile.getAbsolutePath());
+        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        
+        // Step 5: Verify XLS v2 contains the FULL set of keys (inherited + updated from partial Excel)
+        int xlsV2 = locFacade.lastVersion(Status.XLS);
+        Assert.assertTrue("New XLS version should be created", xlsV2 > xlsV1);
+        
+        List<Localization> xlsV2Locs = locFacade.getLocalizations(xlsV2, Status.XLS, false, null);
+        long xlsV2EnglishCount = xlsV2Locs.stream()
+                .filter(loc -> "en".equals(loc.getLocale()))
+                .count();
+        logger.info("XLS v2 English count: " + xlsV2EnglishCount);
+        
+        // The MERGE strategy should preserve all entries from v1 + update/add from partial Excel
+        Assert.assertEquals("XLS v2 should have same count as XLS v1 (MERGE inheritance)", 
+                xlsV1EnglishCount, xlsV2EnglishCount);
+        
+        logger.info("MERGE inheritance test PASSED - partial import preserved all data!");
+    }
+
+    /**
+     * Creates a partial Excel file containing only a subset of rows from the original.
+     * Used to simulate partial translator work.
+     */
+    private File createPartialExcel(File originalFile, int maxDataRows) throws IOException {
+        File partialFile = new File(originalFile.getParent(), "partial_" + originalFile.getName());
+        
+        try (FileInputStream fis = new FileInputStream(originalFile);
+             Workbook originalWorkbook = WorkbookFactory.create(fis)) {
+            
+            Sheet originalSheet = originalWorkbook.getSheetAt(0);
+            // Create new XLSX workbook (true = use XSSF/XLSX format instead of HSSF/XLS)
+            Workbook partialWorkbook = WorkbookFactory.create(true);
+            Sheet partialSheet = partialWorkbook.createSheet("SLC Properties");
+            
+            int rowCount = 0;
+            int dataRowCount = 0;
+            
+            Iterator<Row> rowIterator = originalSheet.iterator();
+            while (rowIterator.hasNext() && (dataRowCount < maxDataRows || rowCount == 0)) {
+                Row originalRow = rowIterator.next();
+                Row partialRow = partialSheet.createRow(rowCount);
+                
+                // Copy all cells from original row
+                for (int i = 0; i < originalRow.getLastCellNum(); i++) {
+                    Cell originalCell = originalRow.getCell(i);
+                    if (originalCell != null) {
+                        Cell partialCell = partialRow.createCell(i);
+                        switch (originalCell.getCellType()) {
+                            case STRING:
+                                partialCell.setCellValue(originalCell.getStringCellValue());
+                                break;
+                            case NUMERIC:
+                                partialCell.setCellValue(originalCell.getNumericCellValue());
+                                break;
+                            case BOOLEAN:
+                                partialCell.setCellValue(originalCell.getBooleanCellValue());
+                                break;
+                            default:
+                                partialCell.setCellValue("");
+                        }
+                    }
+                }
+                
+                // Header row doesn't count as data
+                if (rowCount > 0) {
+                    dataRowCount++;
+                }
+                rowCount++;
+            }
+            
+            // Save partial workbook
+            try (FileOutputStream fos = new FileOutputStream(partialFile)) {
+                partialWorkbook.write(fos);
+            }
+            partialWorkbook.close();
+        }
+        
+        return partialFile;
+    }
+
+    /**
      * Helper method to find the most recently created export file.
      */
     private File findExportedFile(String directory, String suffix) {

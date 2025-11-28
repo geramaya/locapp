@@ -70,8 +70,6 @@ public class CommandContext {
     public void loadCommands() {
         addCommand("quit", QuitCommand.class);
         addCommand("q", QuitCommand.class);
-        addCommand("h", HelpCommand.class);
-        addCommand("help", HelpCommand.class);
         addCommand("clear-loc", ClearLocalizationCommand.class);
         addCommand("cl", ClearLocalizationCommand.class);
         addCommand("import-properties", ImportPropertiesCommand.class);
@@ -104,7 +102,6 @@ public class CommandContext {
         addCommand("set-default-language", SetDefaultLanguageCommand.class);
         addCommand("csv-import", CSVImportCommand.class);
         addCommand("csvin", CSVImportCommand.class);
-        addCommand("cscmig", CSCMigrationCommand.class);
         addCommand("search", SearchCommand.class);
         addCommand("s", SearchCommand.class);
         addCommand("find", SearchCommand.class);
