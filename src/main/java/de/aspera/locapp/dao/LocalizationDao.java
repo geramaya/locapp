@@ -321,40 +321,19 @@ public class LocalizationDao extends AbstractDao<Localization> {
 		try {
 			String lowerQuery = query.toLowerCase();
 
-			// Step 1: Find distinct key/fileName combinations where key or value matches
-			String findMatchingKeysQuery = "SELECT DISTINCT target.key, target.fileName FROM "
-					+ Localization.class.getSimpleName()
-					+ " target WHERE LOWER(target.key) LIKE :query OR LOWER(target.value) LIKE :query";
+			// Use a subquery to find all translations for keys that match the search.
+			// This avoids building a query with many OR conditions which can cause
+			// StackOverflowError in EclipseLink's JPQL parser for queries matching many keys.
+			String searchQuery = "SELECT target FROM " + Localization.class.getSimpleName() + " target "
+					+ "WHERE EXISTS ("
+					+ "  SELECT 1 FROM " + Localization.class.getSimpleName() + " match "
+					+ "  WHERE match.key = target.key AND match.fileName = target.fileName "
+					+ "  AND (LOWER(match.key) LIKE :query OR LOWER(match.value) LIKE :query)"
+					+ ") "
+					+ "ORDER BY target.fileName, target.key, target.locale";
 
-			Query matchingKeysQ = getEntityManager().createQuery(findMatchingKeysQuery);
-			matchingKeysQ.setParameter("query", "%" + lowerQuery + "%");
-
-			@SuppressWarnings("unchecked")
-			List<Object[]> matchingKeyPairs = (List<Object[]>) matchingKeysQ.getResultList();
-
-			if (matchingKeyPairs.isEmpty()) {
-				return new ArrayList<>();
-			}
-
-			// Step 2: Fetch all translations for the matched key/fileName combinations
-			StringBuilder fetchAllTranslationsQuery = new StringBuilder();
-			fetchAllTranslationsQuery.append("SELECT target FROM ")
-					.append(Localization.class.getSimpleName())
-					.append(" target WHERE ");
-
-			List<String> conditions = new ArrayList<>();
-			for (int i = 0; i < matchingKeyPairs.size(); i++) {
-				conditions.add("(target.key = :key" + i + " AND target.fileName = :fileName" + i + ")");
-			}
-			fetchAllTranslationsQuery.append(String.join(" OR ", conditions));
-			fetchAllTranslationsQuery.append(" ORDER BY target.fileName, target.key, target.locale");
-
-			Query fetchAllQ = getEntityManager().createQuery(fetchAllTranslationsQuery.toString());
-			for (int i = 0; i < matchingKeyPairs.size(); i++) {
-				Object[] pair = matchingKeyPairs.get(i);
-				fetchAllQ.setParameter("key" + i, pair[0]);
-				fetchAllQ.setParameter("fileName" + i, pair[1]);
-			}
+			Query fetchAllQ = getEntityManager().createQuery(searchQuery);
+			fetchAllQ.setParameter("query", "%" + lowerQuery + "%");
 
 			@SuppressWarnings("unchecked")
 			List<Localization> locs = (List<Localization>) fetchAllQ.getResultList();
