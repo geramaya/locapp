@@ -416,7 +416,8 @@ public class FullRoundtripIntegrationTest extends BasicFacadeTest {
              Workbook originalWorkbook = WorkbookFactory.create(fis)) {
             
             Sheet originalSheet = originalWorkbook.getSheetAt(0);
-            Workbook partialWorkbook = WorkbookFactory.create(true); // Create new XLSX
+            // Create new XLSX workbook (true = use XSSF/XLSX format instead of HSSF/XLS)
+            Workbook partialWorkbook = WorkbookFactory.create(true);
             Sheet partialSheet = partialWorkbook.createSheet("SLC Properties");
             
             int rowCount = 0;

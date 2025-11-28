@@ -116,6 +116,7 @@ public class DeltaExportTest extends BasicFacadeTest {
         
         // Create SRC v2 with one modified key
         int srcV2 = srcV1 + 1;
+        List<Localization> srcV2Locs = new java.util.ArrayList<>();
         for (Localization loc : srcV1Locs) {
             Localization newLoc = new Localization();
             newLoc.setFileName(loc.getFileName());
@@ -133,8 +134,10 @@ public class DeltaExportTest extends BasicFacadeTest {
                 newLoc.setValue(loc.getValue());
             }
             
-            locFacade.saveLocalizations(List.of(newLoc));
+            srcV2Locs.add(newLoc);
         }
+        // Batch save all localizations in a single transaction
+        locFacade.saveLocalizations(srcV2Locs);
         
         logger.info("Created SRC v2 with one modified key");
         

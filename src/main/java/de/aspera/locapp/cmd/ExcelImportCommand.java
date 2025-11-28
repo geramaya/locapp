@@ -7,10 +7,12 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -108,7 +110,7 @@ public class ExcelImportCommand implements CommandRunnable, Runnable {
         Iterator<Row> iterator = datatypeSheet.iterator();
         List<Localization> importLocs = new ArrayList<>();
         // Track which inherited entries have been updated by Excel data
-        java.util.Set<String> updatedFromExcel = new java.util.HashSet<>();
+        Set<String> updatedFromExcel = new HashSet<>();
 
         while (iterator.hasNext()) {
             Row row = iterator.next();
