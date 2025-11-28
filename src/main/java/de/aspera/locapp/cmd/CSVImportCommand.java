@@ -31,8 +31,9 @@ import picocli.CommandLine.Parameters;
     description = "Import properties as CSV formatted file.",
     mixinStandardHelpOptions = true
 )
-public class CSVImportCommand implements CommandRunnable, Runnable {
+public class CSVImportCommand implements Runnable {
 
+	public static final String EMPTY_VALUE = "";
 	private static final Logger logger = Logger.getLogger(CSVImportCommand.class.getName());
 	private LocalizationDao locFacade = new LocalizationDao();
 
@@ -63,7 +64,8 @@ public class CSVImportCommand implements CommandRunnable, Runnable {
 		if (csvFile != null) {
 			importPath = csvFile.toString();
 		} else {
-			importPath = CommandContext.getInstance().nextArgument();
+			logger.severe("No csv file provided. Use: csv-import <path>");
+			return;
 		}
 		
 		if (StringUtils.isEmpty(importPath) || !FileUtils.getFile(importPath).exists()) {

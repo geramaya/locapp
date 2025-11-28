@@ -24,8 +24,6 @@ import org.jline.reader.impl.completer.StringsCompleter;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
 
-import de.aspera.locapp.cmd.CommandContext;
-import de.aspera.locapp.cmd.CommandException;
 import de.aspera.locapp.cmd.LocAppCLI;
 import de.aspera.locapp.dao.H2DatabaseManager;
 import de.aspera.locapp.util.Resources;
@@ -57,11 +55,10 @@ public class MainStart {
             // Initialize Picocli CommandLine
             commandLine = new CommandLine(new LocAppCLI());
             
-            // Legacy support: still execute help through context
             Resources.getInstance();
             loadDatabase();
-            // Start the program with init parameters (e.g. blacklist for import filenames)
-            CommandContext.getInstance().executeCommand("init");
+            // Execute init command through Picocli
+            commandLine.execute("init");
         } catch (Exception e) {
             logger.log(Level.SEVERE, e.getMessage(), e);
             System.exit(0);
@@ -103,7 +100,6 @@ public class MainStart {
                 "clear-ignore-list", "cil",
                 "set-default-language", "sdl",
                 "csv-import", "csvin",
-                "cscmig",
                 "search", "s", "find",
                 // Common options
                 "--help", "-h",
@@ -132,20 +128,9 @@ public class MainStart {
                     
                     String cmdline = line.trim();
                     
-                    // Parse the command line
+                    // Parse the command line and execute via Picocli
                     String[] args = cmdline.split("\\s+");
-                    
-                    // Try to execute via Picocli first
-                    try {
-                        int exitCode = cmd.execute(args);
-                        if (exitCode != 0) {
-                            // If Picocli execution failed, try legacy CommandContext
-                            executeLegacyCommand(cmdline);
-                        }
-                    } catch (Exception e) {
-                        // Fall back to legacy CommandContext if Picocli fails
-                        executeLegacyCommand(cmdline);
-                    }
+                    cmd.execute(args);
                     
                 } catch (UserInterruptException e) {
                     // User pressed Ctrl+C
@@ -158,47 +143,27 @@ public class MainStart {
             }
         } catch (IOException e) {
             logger.log(Level.SEVERE, "Failed to initialize terminal", e);
-            // Fall back to legacy mode
-            promptCLILegacy();
+            // Fall back to Scanner-based mode
+            promptCLIFallback();
         }
     }
     
     /**
-     * Legacy CLI mode using Scanner for environments where JLine may not work.
+     * Fallback CLI mode using Scanner for environments where JLine may not work.
      */
     @SuppressWarnings("resource")
-    private static void promptCLILegacy() {
+    private static void promptCLIFallback() {
         // Scanner wrapping System.in should not be closed as it would close System.in
         // which is a system resource that should remain open for the application lifetime
         java.util.Scanner scanner = new java.util.Scanner(System.in);
+        CommandLine cmd = new CommandLine(new LocAppCLI());
         while (true) {
             System.out.print("\n>> command: ");
             String cmdline = scanner.nextLine().trim();
-            executeLegacyCommand(cmdline);
-        }
-    }
-    
-    /**
-     * Execute command using the legacy CommandContext.
-     */
-    private static void executeLegacyCommand(String cmdline) {
-        if (cmdline.contains(BLANK)) {
-            String[] args = cmdline.split(BLANK);
-            for (int i = 0; i < args.length; i++) {
-                CommandContext.getInstance().addArgument(args[i]);
+            if (!cmdline.isEmpty()) {
+                String[] args = cmdline.split("\\s+");
+                cmd.execute(args);
             }
-        } else {
-            CommandContext.getInstance().addArgument(cmdline);
-        }
-        String cmd = CommandContext.getInstance().nextArgument();
-        if (CommandContext.getInstance().isCommand(cmd)) {
-            try {
-                CommandContext.getInstance().executeCommand(cmd);
-            } catch (CommandException e) {
-                logger.log(Level.SEVERE, e.getMessage(), e);
-            }
-        } else {
-            logger.warning("Sorry! This command is unknown!");
         }
     }
 

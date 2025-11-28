@@ -39,7 +39,8 @@ import picocli.CommandLine.Parameters;
     description = "Import properties from an excel file using MERGE strategy (inherits from previous XLS version).",
     mixinStandardHelpOptions = true
 )
-public class ExcelImportCommand implements CommandRunnable, Runnable {
+public class ExcelImportCommand implements Runnable {
+    public static final String EMPTY_VALUE = "";
     private static final int COL_KEY = 1;
     private static final Logger logger = Logger.getLogger(ExcelExportCommand.class.getName());
     private LocalizationDao locFacade = new LocalizationDao();
@@ -80,7 +81,8 @@ public class ExcelImportCommand implements CommandRunnable, Runnable {
         if (importFile != null) {
             importPath = importFile.toString();
         } else {
-            importPath = CommandContext.getInstance().nextArgument();
+            logger.severe("No excel file provided. Use: excel-import <path>");
+            return;
         }
         
         if (StringUtils.isEmpty(importPath) || (!importPath.endsWith(".xlsx") && !importPath.endsWith(".xls"))) {

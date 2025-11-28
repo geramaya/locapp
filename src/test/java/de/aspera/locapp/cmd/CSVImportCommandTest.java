@@ -14,10 +14,8 @@ public class CSVImportCommandTest extends BasicFacadeTest {
 	@Test
 	public void importCSVFile()
 			throws InstantiationException, IllegalAccessException, IOException, DatabaseException, CommandException {
-		CMDCTX.addArgument("csvin");
 		String file = CSVImportCommandTest.class.getClassLoader().getResource("csv_import_test.csv").getFile();
-		CMDCTX.addArgument(file);
-		CMDCTX.executeCommand(CMDCTX.nextArgument());
+		executeCommand("csv-import", file);
         long countSRC = new LocalizationDao().countOfProperties(Status.CSV, null, false);
         Assert.assertNotNull(countSRC);
         Assert.assertEquals(countSRC, 9);

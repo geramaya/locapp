@@ -19,37 +19,18 @@ public class PropertiesCounterCommandTest extends BasicFacadeTest {
 
         String testfiles = PropertiesCounterCommandTest.class.getClassLoader().getResource("testfiles").getFile();
 
-        CMDCTX.addArgument("init");
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
-
-        CMDCTX.addArgument("files");
-        CMDCTX.addArgument(testfiles);
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
-
-        CMDCTX.addArgument("cl");
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
-
-        CMDCTX.addArgument("ip");
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("init");
+        executeCommand("files", testfiles);
+        executeCommand("clear-loc");
+        executeCommand("import-properties");
     }
 
     @Test
     public void countSRCPropertiesFiles()
             throws InstantiationException, IllegalAccessException, IOException, DatabaseException, CommandException {
-        CMDCTX.addArgument("pc");
-        CMDCTX.addArgument("src");
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
-
-        CMDCTX.addArgument("pc");
-        CMDCTX.addArgument("src");
-        CMDCTX.addArgument("fr");
-        CMDCTX.addArgument("1");
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
-
-        CMDCTX.addArgument("pc");
-        CMDCTX.addArgument("src");
-        CMDCTX.addArgument("fr");
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("properties-count", "src");
+        executeCommand("properties-count", "src", "-l", "fr", "-e");
+        executeCommand("properties-count", "src", "-l", "fr");
 
         long countSRC = new LocalizationDao().countOfProperties(Status.SRC, null, false);
         Assert.assertNotNull(countSRC);

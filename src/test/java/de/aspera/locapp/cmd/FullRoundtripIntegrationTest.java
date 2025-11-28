@@ -55,21 +55,16 @@ public class FullRoundtripIntegrationTest extends BasicFacadeTest {
         testDataDir = LocalizationTestGenerator.generateRealisticPropertiesFiles(tempBasePath);
         
         // Initialize configuration
-        CMDCTX.addArgument("init");
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("init");
         
         // Load generated test files
-        CMDCTX.addArgument("files");
-        CMDCTX.addArgument(testDataDir.toString());
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("files", testDataDir.toString());
         
         // Clear database
-        CMDCTX.addArgument("cl");
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("clear-loc");
         
         // Import properties
-        CMDCTX.addArgument("ip");
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("import-properties");
         
         logger.info("Test setup complete - test data directory: " + testDataDir);
     }
@@ -104,9 +99,7 @@ public class FullRoundtripIntegrationTest extends BasicFacadeTest {
         // Step 1: Export to XLSX (use the unique temp base directory)
         String exportDir = tempBasePath.toString();
         logger.info("Step 1: Exporting to XLSX...");
-        CMDCTX.addArgument("ee");
-        CMDCTX.addArgument(exportDir);
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("excel-export", exportDir);
         
         exportedFile = findExportedFile(exportDir, "-export-all.xlsx");
         Assert.assertNotNull("Exported .xlsx file should exist", exportedFile);
@@ -121,9 +114,7 @@ public class FullRoundtripIntegrationTest extends BasicFacadeTest {
         
         // Step 3: Re-Import
         logger.info("Step 3: Re-importing modified Excel...");
-        CMDCTX.addArgument("ei");
-        CMDCTX.addArgument(exportedFile.getAbsolutePath());
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("excel-import", exportedFile.getAbsolutePath());
         
         // Step 4: Verification
         logger.info("Step 4: Verifying modifications...");
@@ -297,17 +288,13 @@ public class FullRoundtripIntegrationTest extends BasicFacadeTest {
         
         // Step 1: Export to XLSX
         String exportDir = tempBasePath.toString();
-        CMDCTX.addArgument("ee");
-        CMDCTX.addArgument(exportDir);
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("excel-export", exportDir);
         
         File xlsxFile = findExportedFile(exportDir, "-export-all.xlsx");
         Assert.assertNotNull("Exported .xlsx file should exist", xlsxFile);
         
         // Step 2: Re-Import the Excel (without any modifications)
-        CMDCTX.addArgument("ei");
-        CMDCTX.addArgument(xlsxFile.getAbsolutePath());
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("excel-import", xlsxFile.getAbsolutePath());
         
         // Step 3: Verify XLS counts match SRC counts for all languages
         int xlsVersion = locFacade.lastVersion(Status.XLS);
@@ -350,9 +337,7 @@ public class FullRoundtripIntegrationTest extends BasicFacadeTest {
         // Step 1: Export full SRC data to XLSX
         String exportDir = tempBasePath.toString();
         logger.info("Step 1: Exporting full data to XLSX...");
-        CMDCTX.addArgument("ee");
-        CMDCTX.addArgument(exportDir);
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("excel-export", exportDir);
         
         File fullExcelFile = findExportedFile(exportDir, "-export-all.xlsx");
         Assert.assertNotNull("Exported .xlsx file should exist", fullExcelFile);
@@ -367,9 +352,7 @@ public class FullRoundtripIntegrationTest extends BasicFacadeTest {
         
         // Step 2: Import full Excel to create XLS v1
         logger.info("Step 2: Importing full Excel to create XLS v1...");
-        CMDCTX.addArgument("ei");
-        CMDCTX.addArgument(fullExcelFile.getAbsolutePath());
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("excel-import", fullExcelFile.getAbsolutePath());
         
         int xlsV1 = locFacade.lastVersion(Status.XLS);
         List<Localization> xlsV1Locs = locFacade.getLocalizations(xlsV1, Status.XLS, false, null);
@@ -384,9 +367,7 @@ public class FullRoundtripIntegrationTest extends BasicFacadeTest {
         
         // Step 4: Import partial Excel - this should MERGE with XLS v1
         logger.info("Step 4: Importing partial Excel (should MERGE with XLS v1)...");
-        CMDCTX.addArgument("ei");
-        CMDCTX.addArgument(partialExcelFile.getAbsolutePath());
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("excel-import", partialExcelFile.getAbsolutePath());
         
         // Step 5: Verify XLS v2 contains the FULL set of keys (inherited + updated from partial Excel)
         int xlsV2 = locFacade.lastVersion(Status.XLS);

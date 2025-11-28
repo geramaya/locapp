@@ -13,17 +13,12 @@ public class ExportPropertiesCommandTest extends BasicFacadeTest {
 
     @Test
     public void importExcelFile() throws InstantiationException, IllegalAccessException, IOException, CommandException {
-        CMDCTX.addArgument("cl");
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("clear-loc");
 
-        CMDCTX.addArgument("ei");
         String file = ExportPropertiesCommandTest.class.getClassLoader().getResource("slc_excel_export.xlsx").getFile();
-        CMDCTX.addArgument(file);
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("excel-import", file);
 
-        CMDCTX.addArgument("ep");
-        CMDCTX.addArgument(TEMP_DIR);
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("export-properties", TEMP_DIR);
 
     }
 

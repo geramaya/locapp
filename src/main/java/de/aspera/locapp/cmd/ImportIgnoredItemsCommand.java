@@ -25,7 +25,7 @@ import picocli.CommandLine.Parameters;
     description = "Import list of files that are to be excluded from the translation process.",
     mixinStandardHelpOptions = true
 )
-public class ImportIgnoredItemsCommand implements CommandRunnable, Runnable {
+public class ImportIgnoredItemsCommand implements Runnable {
 	private static final Logger logger = Logger.getLogger(ImportIgnoredItemsCommand.class.getName());
 
 	private IgnoredItemDao ignoredItemFacade = new IgnoredItemDao();
@@ -39,8 +39,8 @@ public class ImportIgnoredItemsCommand implements CommandRunnable, Runnable {
 		if (ignoreListFile != null) {
 			ignoredItemsListPath = ignoreListFile.toString();
 		} else {
-			var ctx = CommandContext.getInstance();
-			ignoredItemsListPath = ctx.nextArgument();
+			logger.warning("No ignore list file provided. Use: import-ignore-list <path>");
+			return;
 		}
 		
 		var ignoredItems = readIgnoredItemsFile(ignoredItemsListPath);

@@ -20,7 +20,7 @@ import picocli.CommandLine.Option;
     description = "Check if all SRC properties provided by XLS properties with all or specified languages.",
     mixinStandardHelpOptions = true
 )
-public class CheckIntegrityCommand implements CommandRunnable, Runnable {
+public class CheckIntegrityCommand implements Runnable {
 
     private static final Logger logger = Logger.getLogger(CheckIntegrityCommand.class.getName());
     private LocalizationDao locFacade = new LocalizationDao();
@@ -34,7 +34,8 @@ public class CheckIntegrityCommand implements CommandRunnable, Runnable {
             if (language != null) {
                 checkIntegrityProperties(language);
             } else {
-                checkIntegrityProperties(CommandContext.getInstance().allArguments());
+                // No language specified, check all languages
+                checkIntegrityProperties();
             }
         } catch (Exception e) {
             logger.log(Level.SEVERE, e.getMessage(), e);

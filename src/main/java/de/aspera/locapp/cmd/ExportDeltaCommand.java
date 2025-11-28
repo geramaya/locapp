@@ -31,8 +31,9 @@ import picocli.CommandLine.Parameters;
     description = "Export delta (properties vs. excel) into an excel file.",
     mixinStandardHelpOptions = true
 )
-public class ExportDeltaCommand implements CommandRunnable, Runnable {
+public class ExportDeltaCommand implements Runnable {
 
+    public static final String EMPTY_VALUE = "";
     private static final Logger LOGGER        = Logger.getLogger(ExportDeltaCommand.class.getName());
 
     private List<Localization>  locaDeltaList = new ArrayList<>();
@@ -86,7 +87,8 @@ public class ExportDeltaCommand implements CommandRunnable, Runnable {
         if (exportDir != null) {
             exportPath = exportDir.toString();
         } else {
-            exportPath = CommandContext.getInstance().nextArgument();
+            LOGGER.warning("No export path provided. Use: export-delta <path>");
+            return;
         }
         
         String fileName = HelperUtil.currentTimestamp() + "-delta.xlsx";

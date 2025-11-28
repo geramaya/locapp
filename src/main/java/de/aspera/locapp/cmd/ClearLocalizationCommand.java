@@ -14,7 +14,7 @@ import picocli.CommandLine.Command;
     description = "Delete all(!) entries for Localization!",
     mixinStandardHelpOptions = true
 )
-public class ClearLocalizationCommand implements CommandRunnable, Runnable {
+public class ClearLocalizationCommand implements Runnable {
 
     private static final Logger LOGGER = Logger.getLogger(ClearLocalizationCommand.class.getName());
 

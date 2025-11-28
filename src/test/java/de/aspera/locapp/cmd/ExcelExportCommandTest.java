@@ -15,29 +15,17 @@ public class ExcelExportCommandTest extends BasicFacadeTest {
 
         String testfiles = ExcelExportCommandTest.class.getClassLoader().getResource("testfiles").getFile();
 
-        CMDCTX.addArgument("init");
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
-
-        CMDCTX.addArgument("files");
-        CMDCTX.addArgument(testfiles);
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
-
-        CMDCTX.addArgument("cl");
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
-
-        CMDCTX.addArgument("ip");
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("init");
+        executeCommand("files", testfiles);
+        executeCommand("clear-loc");
+        executeCommand("import-properties");
     }
 
     private static final String TEMP_DIR = FileUtils.getTempDirectoryPath();
 
     @Test
     public void exportExcelFile() throws InstantiationException, IllegalAccessException, IOException, CommandException {
-        CMDCTX.addArgument("ee");
-        CMDCTX.addArgument(TEMP_DIR);
-        CMDCTX.addArgument("fr");
-        CMDCTX.addArgument("1");
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("excel-export", TEMP_DIR, "-l", "fr", "-e");
         logger.info("saved in: " + TEMP_DIR);
     }
 

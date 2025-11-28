@@ -40,18 +40,10 @@ public class ModernExcelIntegrationTest extends BasicFacadeTest {
 
         String testfiles = ModernExcelIntegrationTest.class.getClassLoader().getResource("testfiles").getFile();
 
-        CMDCTX.addArgument("init");
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
-
-        CMDCTX.addArgument("files");
-        CMDCTX.addArgument(testfiles);
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
-
-        CMDCTX.addArgument("cl");
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
-
-        CMDCTX.addArgument("ip");
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("init");
+        executeCommand("files", testfiles);
+        executeCommand("clear-loc");
+        executeCommand("import-properties");
     }
 
     @After
@@ -70,9 +62,7 @@ public class ModernExcelIntegrationTest extends BasicFacadeTest {
     @Test
     public void testExportCreatesValidXlsxFile() throws Exception {
         // Export to a known location
-        CMDCTX.addArgument("ee");
-        CMDCTX.addArgument(TEMP_DIR);
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("excel-export", TEMP_DIR);
 
         // Find the exported file
         File exportedFile = findExportedFile(TEMP_DIR, "-export-all.xlsx");
@@ -110,9 +100,7 @@ public class ModernExcelIntegrationTest extends BasicFacadeTest {
         Assert.assertFalse("Should have localizations to export", originalLocs.isEmpty());
 
         // Export to xlsx
-        CMDCTX.addArgument("ee");
-        CMDCTX.addArgument(TEMP_DIR);
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("excel-export", TEMP_DIR);
 
         // Find exported file
         File exportedFile = findExportedFile(TEMP_DIR, "-export-all.xlsx");
@@ -120,12 +108,9 @@ public class ModernExcelIntegrationTest extends BasicFacadeTest {
         createdFiles.add(exportedFile);
 
         // Clear database and import the file back
-        CMDCTX.addArgument("cl");
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("clear-loc");
 
-        CMDCTX.addArgument("ei");
-        CMDCTX.addArgument(exportedFile.getAbsolutePath());
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("excel-import", exportedFile.getAbsolutePath());
 
         // Verify imported data
         int lastVersionAfter = locFacade.lastVersion(Status.XLS);
@@ -157,9 +142,7 @@ public class ModernExcelIntegrationTest extends BasicFacadeTest {
     @Test
     public void testEditAndSaveDetectsModifications() throws Exception {
         // Export to xlsx
-        CMDCTX.addArgument("ee");
-        CMDCTX.addArgument(TEMP_DIR);
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("excel-export", TEMP_DIR);
 
         // Find exported file
         File exportedFile = findExportedFile(TEMP_DIR, "-export-all.xlsx");
@@ -199,12 +182,9 @@ public class ModernExcelIntegrationTest extends BasicFacadeTest {
         Assert.assertNotNull("Should have found original key", originalKey);
         
         // Clear database and import the modified file
-        CMDCTX.addArgument("cl");
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("clear-loc");
 
-        CMDCTX.addArgument("ei");
-        CMDCTX.addArgument(exportedFile.getAbsolutePath());
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("excel-import", exportedFile.getAbsolutePath());
 
         // Verify the modification was imported
         int lastVersion = locFacade.lastVersion(Status.XLS);
@@ -232,10 +212,7 @@ public class ModernExcelIntegrationTest extends BasicFacadeTest {
      */
     @Test
     public void testLanguageSpecificExport() throws Exception {
-        CMDCTX.addArgument("ee");
-        CMDCTX.addArgument(TEMP_DIR);
-        CMDCTX.addArgument("fr");
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("excel-export", TEMP_DIR, "-l", "fr");
 
         // Find the exported file
         File exportedFile = findExportedFile(TEMP_DIR, "-export-fr.xlsx");

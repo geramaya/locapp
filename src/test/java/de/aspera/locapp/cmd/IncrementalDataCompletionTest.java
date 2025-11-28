@@ -83,8 +83,7 @@ public class IncrementalDataCompletionTest extends BasicFacadeTest {
         copyTestFiles();
         
         // Initialize configuration
-        CMDCTX.addArgument("init");
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("init");
         
         logger.info("Test setup complete - test data directory: " + testDataDir);
     }
@@ -130,19 +129,15 @@ public class IncrementalDataCompletionTest extends BasicFacadeTest {
         
         // Step 0.1: Delete all existing Localization entries
         logger.info("Step 0.1: Clearing database (cl)...");
-        CMDCTX.addArgument("cl");
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("clear-loc");
         
         // Step 0.2: Scan properties files and save file information
         logger.info("Step 0.2: Scanning properties files (f)...");
-        CMDCTX.addArgument("f");
-        CMDCTX.addArgument(testDataDir.toString());
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("files", testDataDir.toString());
         
         // Step 0.3: Import raw files (creates SRC V1)
         logger.info("Step 0.3: Importing properties (ip)...");
-        CMDCTX.addArgument("ip");
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("import-properties");
         
         // Step 0.4: Verify SRC count = 10
         logger.info("Step 0.4: Verifying SRC count...");
@@ -156,9 +151,7 @@ public class IncrementalDataCompletionTest extends BasicFacadeTest {
         
         // Step 1.1: Export full 16-entry matrix for translation
         logger.info("Step 1.1: Exporting to Excel (ee)...");
-        CMDCTX.addArgument("ee");
-        CMDCTX.addArgument(tempExcelDir.toString());
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("excel-export", tempExcelDir.toString());
         
         File excelV1 = findExportedFile(tempExcelDir.toString(), "-export-all.xlsx");
         Assert.assertNotNull("Excel V1 export file should exist", excelV1);
@@ -170,9 +163,7 @@ public class IncrementalDataCompletionTest extends BasicFacadeTest {
         
         // Step 1.3: Import modifications (creates XLS V2)
         logger.info("Step 1.3: Importing modified Excel (ei)...");
-        CMDCTX.addArgument("ei");
-        CMDCTX.addArgument(excelV1.getAbsolutePath());
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("excel-import", excelV1.getAbsolutePath());
         
         // Step 1.4: Verify XLS count = 16 (Dense Matrix)
         logger.info("Step 1.4: Verifying XLS V2 count...");
@@ -191,10 +182,7 @@ public class IncrementalDataCompletionTest extends BasicFacadeTest {
         
         // Step 2.1: Export only properties with empty values
         logger.info("Step 2.1: Exporting empty properties (ee -e)...");
-        CMDCTX.addArgument("ee");
-        CMDCTX.addArgument(tempExcelDir.toString());
-        CMDCTX.addArgument("1"); // Empty values flag
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("excel-export", tempExcelDir.toString(), "-e");
         
         File excelV2 = findExportedFile(tempExcelDir.toString(), "-export-all.xlsx");
         Assert.assertNotNull("Excel V2 export file should exist", excelV2);
@@ -206,9 +194,7 @@ public class IncrementalDataCompletionTest extends BasicFacadeTest {
         
         // Step 2.3: Import final modifications (creates XLS V3)
         logger.info("Step 2.3: Importing final Excel (ei)...");
-        CMDCTX.addArgument("ei");
-        CMDCTX.addArgument(excelV2.getAbsolutePath());
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("excel-import", excelV2.getAbsolutePath());
         
         // Verify XLS V3 count = 16 and no empty values
         int xlsV3 = locFacade.lastVersion(Status.XLS);
@@ -222,14 +208,11 @@ public class IncrementalDataCompletionTest extends BasicFacadeTest {
         
         // Step 3.1: Export XLS V3 back to properties files
         logger.info("Step 3.1: Exporting to properties (ep)...");
-        CMDCTX.addArgument("ep");
-        CMDCTX.addArgument(testDataDir.toString());
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("export-properties", testDataDir.toString());
         
         // Step 3.2: Re-import the fully populated physical files (creates SRC V3)
         logger.info("Step 3.2: Re-importing properties (ip)...");
-        CMDCTX.addArgument("ip");
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("import-properties");
         
         // Step 3.3: Verify SRC V3 count = 16 (Dense Matrix promoted to Source)
         logger.info("Step 3.3: Verifying SRC V3 count...");
@@ -482,16 +465,12 @@ public class IncrementalDataCompletionTest extends BasicFacadeTest {
     @Test
     public void testPrerequisiteFilesStructure() throws Exception {
         // Clear database
-        CMDCTX.addArgument("cl");
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("clear-loc");
         
         // Scan and import
-        CMDCTX.addArgument("f");
-        CMDCTX.addArgument(testDataDir.toString());
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("files", testDataDir.toString());
         
-        CMDCTX.addArgument("ip");
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("import-properties");
         
         // Verify the prerequisite file structure
         int srcVersion = locFacade.lastVersion(Status.SRC);

@@ -37,34 +37,19 @@ public class ImportDeltaCommandTest extends BasicFacadeTest {
         String xlsfile = ExcelImportCommandTest.class.getClassLoader().getResource("slc_excel_to_import.xlsx").getFile();
         locaFacade = new LocalizationDao();
 
-        CMDCTX.addArgument("init");
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
-
-        CMDCTX.addArgument("cl");
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
-
-        CMDCTX.addArgument("files");
-        CMDCTX.addArgument(testfiles);
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
-
-        CMDCTX.addArgument("ip");
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("init");
+        executeCommand("clear-loc");
+        executeCommand("files", testfiles);
+        executeCommand("import-properties");
 
         updateFullPath(xlsfile);
 
-        CMDCTX.addArgument("ei");
-        CMDCTX.addArgument(xlsfile);
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
-
-        CMDCTX.addArgument("ed");
-        CMDCTX.addArgument(testfiles);
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("excel-import", xlsfile);
+        executeCommand("export-delta", testfiles);
 
         deltafile = ExcelImportCommandTest.class.getClassLoader().getResource("deltatest/" + getDeltaFile()).getFile();
 
-        CMDCTX.addArgument("id");
-        CMDCTX.addArgument(deltafile);
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("import-delta", deltafile);
     }
 
     @Ignore
