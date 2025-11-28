@@ -2,5 +2,8 @@
 /.settings/
 /.classpath
 /.project
+/.github
+/.idea
+/.vscode
 
 localization_failed_*.csv
