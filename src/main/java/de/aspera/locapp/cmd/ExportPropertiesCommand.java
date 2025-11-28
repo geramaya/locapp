@@ -78,6 +78,11 @@ public class ExportPropertiesCommand implements CommandRunnable, Runnable {
 			logger.warning("No export path found! Please define a export path.");
 			return;
 		}
+		
+		// Ensure exportPath ends with a path separator
+		if (!exportPath.endsWith(File.separator) && !exportPath.endsWith("/")) {
+			exportPath += File.separator;
+		}
 
 		OutputStream outStream = null;
 		InputStream inputStream = null;
