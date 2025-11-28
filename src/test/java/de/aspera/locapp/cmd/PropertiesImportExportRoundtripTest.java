@@ -221,6 +221,9 @@ public class PropertiesImportExportRoundtripTest extends BasicFacadeTest {
             
             logger.info("Comparing " + fileName + ": original=" + original.size() + " keys, exported=" + exported.size() + " keys");
             
+            // Track if any errors found for this file
+            int errorCountBefore = errors.size();
+            
             // Compare keys and values
             for (String key : original.stringPropertyNames()) {
                 String originalValue = original.getProperty(key);
@@ -240,7 +243,7 @@ public class PropertiesImportExportRoundtripTest extends BasicFacadeTest {
                 }
             }
             
-            if (errors.stream().noneMatch(e -> e.startsWith(fileName))) {
+            if (errors.size() == errorCountBefore) {
                 logger.info("  " + fileName + ": PASSED");
             }
         }
@@ -261,13 +264,7 @@ public class PropertiesImportExportRoundtripTest extends BasicFacadeTest {
             return flatPath;
         }
         
-        // Second try: with subdirectory structure
-        Path directPath = exportDir.resolve("testdata_roundtrip").resolve(fileName);
-        if (Files.exists(directPath)) {
-            return directPath;
-        }
-        
-        // Third try: search recursively
+        // Second try: search recursively
         try {
             return Files.walk(exportDir)
                 .filter(p -> p.getFileName().toString().equals(fileName))
