@@ -34,7 +34,7 @@ import picocli.CommandLine.Parameters;
 @Command(
     name = "excel-import",
     aliases = {"ei"},
-    description = "Import properties from an excel file.",
+    description = "Import properties from an excel file using MERGE strategy (inherits from previous XLS version).",
     mixinStandardHelpOptions = true
 )
 public class ExcelImportCommand implements CommandRunnable, Runnable {
@@ -65,6 +65,14 @@ public class ExcelImportCommand implements CommandRunnable, Runnable {
         this.importFile = importFile;
     }
 
+    /**
+     * Generates a unique key for a localization entry for MERGE operations.
+     * Format: fileName|key|locale
+     */
+    private String generateMergeKey(Localization loc) {
+        return loc.getFileName() + "|" + loc.getKey() + "|" + loc.getLocale();
+    }
+
     private void importExcel() throws DatabaseException, IOException, CommandException {
         String importPath;
         if (importFile != null) {
@@ -78,12 +86,29 @@ public class ExcelImportCommand implements CommandRunnable, Runnable {
             return;
         }
 
+        // MERGE Strategy: Load inherited entries from previous XLS version
+        int previousVersion = locFacade.lastVersion(Status.XLS);
+        int newVersion = previousVersion + 1;
+        
+        // Map to store inherited entries (keyed by fileName|key|locale)
+        Map<String, Localization> inheritedMap = new HashMap<>();
+        if (previousVersion > 0) {
+            List<Localization> inheritedLocs = locFacade.getLocalizations(previousVersion, Status.XLS, false, null);
+            logger.log(Level.INFO, "Inheriting " + inheritedLocs.size() + " entries from XLS version " + previousVersion);
+            
+            for (Localization loc : inheritedLocs) {
+                String key = generateMergeKey(loc);
+                inheritedMap.put(key, loc);
+            }
+        }
+
         FileInputStream excelFile = new FileInputStream(new File(importPath));
         Workbook workbook = WorkbookFactory.create(excelFile);
         Sheet datatypeSheet = workbook.getSheetAt(0);
         Iterator<Row> iterator = datatypeSheet.iterator();
         List<Localization> importLocs = new ArrayList<>();
-        int lastVersion = locFacade.lastVersion(Status.XLS) + 1;
+        // Track which inherited entries have been updated by Excel data
+        java.util.Set<String> updatedFromExcel = new java.util.HashSet<>();
 
         while (iterator.hasNext()) {
             Row row = iterator.next();
@@ -111,14 +136,43 @@ public class ExcelImportCommand implements CommandRunnable, Runnable {
                     String fullPath = row.getCell(row.getLastCellNum() - 1).getStringCellValue();
                     loc.setFullPath(language.equals(Locale.ENGLISH.toString()) ? fullPath
                             : HelperUtil.replaceFullPath(fullPath, language));
-                    loc.setVersion(lastVersion);
+                    loc.setVersion(newVersion);
                     loc.setStatus(Localization.Status.XLS);
                     importLocs.add(loc);
+                    
+                    // Track this key as coming from Excel
+                    updatedFromExcel.add(generateMergeKey(loc));
                 }
             }
         }
+        
+        // Add inherited entries that were NOT in the Excel (MERGE)
+        int inheritedCount = 0;
+        for (Map.Entry<String, Localization> entry : inheritedMap.entrySet()) {
+            if (!updatedFromExcel.contains(entry.getKey())) {
+                Localization inheritedLoc = entry.getValue();
+                // Create new localization for new version
+                Localization loc = new Localization();
+                loc.setCreationDate(new Date());
+                loc.setFileName(inheritedLoc.getFileName());
+                loc.setKey(inheritedLoc.getKey());
+                loc.setValue(inheritedLoc.getValue());
+                loc.setLocale(inheritedLoc.getLocale());
+                loc.setFullPath(inheritedLoc.getFullPath());
+                loc.setVersion(newVersion);
+                loc.setStatus(Status.XLS);
+                importLocs.add(loc);
+                inheritedCount++;
+            }
+        }
+        
+        if (inheritedCount > 0) {
+            logger.log(Level.INFO, "MERGE: Added " + inheritedCount + " inherited entries not present in Excel");
+        }
+        
         locFacade.saveLocalizations(importLocs);
         workbook.close();
+        logger.log(Level.INFO, "Import complete: " + importLocs.size() + " total entries in XLS version " + newVersion);
     }
 
     private Map<String, Integer> buildLanguagePosMap(String cellValue, int cellPos) {

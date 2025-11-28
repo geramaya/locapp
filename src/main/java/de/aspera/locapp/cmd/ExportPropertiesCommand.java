@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
@@ -27,6 +28,7 @@ import de.aspera.locapp.dto.Localization.Status;
 import de.aspera.locapp.util.HelperUtil;
 
 import picocli.CommandLine.Command;
+import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
 /**
@@ -38,7 +40,7 @@ import picocli.CommandLine.Parameters;
 @Command(
     name = "export-properties",
     aliases = {"ep"},
-    description = "Iterate known properties and save into directory.",
+    description = "Iterate known properties and save into directory. Use --delta to export only modified files.",
     mixinStandardHelpOptions = true
 )
 public class ExportPropertiesCommand implements CommandRunnable, Runnable {
@@ -49,6 +51,9 @@ public class ExportPropertiesCommand implements CommandRunnable, Runnable {
 
 	@Parameters(index = "0", description = "Export directory path", arity = "0..1")
 	private Path exportDir;
+
+	@Option(names = {"-d", "--delta"}, description = "Export only files containing keys modified since the previous SRC version.")
+	private boolean deltaExport;
 
 	@Override
 	public void run() {
@@ -64,6 +69,13 @@ public class ExportPropertiesCommand implements CommandRunnable, Runnable {
 	 */
 	public void setExportDir(Path exportDir) {
 		this.exportDir = exportDir;
+	}
+
+	/**
+	 * Sets the delta export flag programmatically for testing.
+	 */
+	public void setDeltaExport(boolean deltaExport) {
+		this.deltaExport = deltaExport;
 	}
 
 	private void exportPropertiesFiles() throws CommandException {
@@ -93,12 +105,29 @@ public class ExportPropertiesCommand implements CommandRunnable, Runnable {
 			Set<String> defaultPathFiles = locFacade.getFiles(Locale.ENGLISH, true);
 			List<String> languages = locFacade.getLanguages(true);
 
+			// For delta export, determine which files contain modified keys
+			Set<String> modifiedFiles = new HashSet<>();
+			if (deltaExport) {
+				modifiedFiles = getFilesWithModifiedKeys();
+				if (modifiedFiles.isEmpty()) {
+					logger.info("Delta export: No files have modified keys. Nothing to export.");
+					return;
+				}
+				logger.info("Delta export: " + modifiedFiles.size() + " files contain modified keys.");
+			}
+
+			int filesExported = 0;
 			for (String defaultPathFile : defaultPathFiles) {
 				for (String local : languages) {
 					if (skipPropertyFile(defaultPathFile, languages)) {
 						continue; // skip unnecessary languages and files
 					}
 					String replacedFile = replaceFilePathWithLocale(defaultPathFile, local);
+
+					// Delta export: skip files that don't contain modified keys
+					if (deltaExport && !modifiedFiles.contains(HelperUtil.removeLanguageFromPath(replacedFile))) {
+						continue;
+					}
 
 					File exportPropertyFile = new File(exportPath + replacedFile);
 					Properties prop = new Properties() {
@@ -192,5 +221,33 @@ public class ExportPropertiesCommand implements CommandRunnable, Runnable {
 			}
 		}
 		return locs;
+	}
+
+	/**
+	 * Gets the set of files that contain modified keys between the last two SRC versions.
+	 * Returns the base file paths (without language suffixes).
+	 */
+	private Set<String> getFilesWithModifiedKeys() throws DatabaseException {
+		int[] versions = locFacade.getLastTwoVersions(Status.SRC);
+		int latestVersion = versions[0];
+		int previousVersion = versions[1];
+		
+		if (latestVersion == 0) {
+			logger.warning("No SRC versions found for delta comparison.");
+			return new HashSet<>();
+		}
+		
+		logger.info("Delta comparison: SRC v" + previousVersion + " -> SRC v" + latestVersion);
+		
+		List<Localization> differences = locFacade.getLocalizationDifferences(previousVersion, latestVersion, Status.SRC);
+		
+		// Collect unique base file paths (without language suffix)
+		Set<String> modifiedFiles = new HashSet<>();
+		for (Localization loc : differences) {
+			String basePath = HelperUtil.removeLanguageFromPath(loc.getFullPath());
+			modifiedFiles.add(basePath);
+		}
+		
+		return modifiedFiles;
 	}
 }
