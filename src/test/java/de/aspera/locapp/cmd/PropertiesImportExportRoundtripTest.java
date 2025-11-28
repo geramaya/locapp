@@ -300,6 +300,152 @@ public class PropertiesImportExportRoundtripTest extends BasicFacadeTest {
         return mostRecent;
     }
 
+    /**
+     * Test that verifies exported properties files have their keys sorted alphabetically (A-Z).
+     * 
+     * Steps:
+     * 1. Generate test data and import through the full workflow
+     * 2. Export to properties format
+     * 3. Read the exported properties file line by line
+     * 4. Extract keys (ignoring comments and empty lines)
+     * 5. Assert that each key is alphabetically greater than or equal to the previous key
+     */
+    @Test
+    public void testExportedPropertiesAreSortedAlphabetically() throws Exception {
+        // Step 1: Initialize configuration
+        logger.info("Step 1: Initializing configuration...");
+        CMDCTX.addArgument("init");
+        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        
+        // Step 2: Scan for properties files
+        logger.info("Step 2: Scanning for properties files...");
+        CMDCTX.addArgument("files");
+        CMDCTX.addArgument(testDataDir.toString());
+        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        
+        // Step 3: Clear database
+        logger.info("Step 3: Clearing database...");
+        CMDCTX.addArgument("cl");
+        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        
+        // Step 4: Import properties (creates entries with SRC status)
+        logger.info("Step 4: Importing properties...");
+        CMDCTX.addArgument("ip");
+        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        
+        // Step 5: Export to Excel (reads SRC status)
+        logger.info("Step 5: Exporting to Excel...");
+        CMDCTX.addArgument("ee");
+        CMDCTX.addArgument(exportDir.toString());
+        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        
+        // Find the exported Excel file
+        exportedExcelFile = findExportedFile(exportDir.toString(), "-export-all.xlsx");
+        Assert.assertNotNull("Exported Excel file should exist", exportedExcelFile);
+        
+        // Step 6: Import from Excel (creates entries with XLS status)
+        logger.info("Step 6: Importing from Excel...");
+        CMDCTX.addArgument("ei");
+        CMDCTX.addArgument(exportedExcelFile.getAbsolutePath());
+        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        
+        // Step 7: Export to properties format
+        logger.info("Step 7: Exporting to properties format...");
+        CMDCTX.addArgument("ep");
+        CMDCTX.addArgument(exportDir.toString());
+        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        
+        // Step 8: Verify alphabetical sorting of exported properties
+        logger.info("Step 8: Verifying alphabetical sorting of exported properties...");
+        
+        // Check the English properties file (app_en.properties)
+        Path exportedEnFile = findExportedPropertiesFile("app_en.properties");
+        Assert.assertNotNull("Exported app_en.properties should exist", exportedEnFile);
+        Assert.assertTrue("Exported file should exist", Files.exists(exportedEnFile));
+        
+        // Read the file and verify keys are sorted
+        List<String> keys = extractKeysFromPropertiesFile(exportedEnFile);
+        Assert.assertFalse("Properties file should have keys", keys.isEmpty());
+        logger.info("Found " + keys.size() + " keys in exported properties file");
+        
+        // Verify that each key is alphabetically >= the previous key
+        for (int i = 1; i < keys.size(); i++) {
+            String previousKey = keys.get(i - 1);
+            String currentKey = keys.get(i);
+            
+            int comparison = previousKey.compareTo(currentKey);
+            Assert.assertTrue(
+                "Keys should be in alphabetical order: '" + previousKey + "' should come before or equal to '" + currentKey + "'",
+                comparison <= 0
+            );
+        }
+        
+        logger.info("SUCCESS: All keys in exported properties file are sorted alphabetically (A-Z)!");
+    }
+
+    /**
+     * Extracts property keys from a .properties file, ignoring comments and empty lines.
+     * 
+     * @param propertiesFile the path to the properties file
+     * @return a list of keys in the order they appear in the file
+     */
+    private List<String> extractKeysFromPropertiesFile(Path propertiesFile) throws IOException {
+        List<String> keys = new ArrayList<>();
+        List<String> lines = Files.readAllLines(propertiesFile);
+        
+        for (String line : lines) {
+            String trimmedLine = line.trim();
+            
+            // Skip empty lines
+            if (trimmedLine.isEmpty()) {
+                continue;
+            }
+            
+            // Skip comment lines (starting with # or !)
+            if (trimmedLine.startsWith("#") || trimmedLine.startsWith("!")) {
+                continue;
+            }
+            
+            // Extract the key (everything before the first = or :)
+            int equalsIndex = trimmedLine.indexOf('=');
+            int colonIndex = trimmedLine.indexOf(':');
+            
+            // Determine the separator index (first valid separator, or skip if none found)
+            int separatorIndex = findFirstSeparatorIndex(equalsIndex, colonIndex);
+            if (separatorIndex == -1) {
+                continue;
+            }
+            
+            String key = trimmedLine.substring(0, separatorIndex).trim();
+            if (!key.isEmpty()) {
+                keys.add(key);
+            }
+        }
+        
+        return keys;
+    }
+
+    /**
+     * Finds the index of the first valid separator (= or :) in a properties file line.
+     * Returns -1 if no separator is found.
+     * 
+     * @param equalsIndex index of '=' character, or -1 if not found
+     * @param colonIndex index of ':' character, or -1 if not found
+     * @return the index of the first separator, or -1 if neither is found
+     */
+    private int findFirstSeparatorIndex(int equalsIndex, int colonIndex) {
+        if (equalsIndex == -1 && colonIndex == -1) {
+            return -1;
+        }
+        if (equalsIndex == -1) {
+            return colonIndex;
+        }
+        if (colonIndex == -1) {
+            return equalsIndex;
+        }
+        return Math.min(equalsIndex, colonIndex);
+    }
+
     @Override
     public Class<?> getLoggerClass() {
         return this.getClass();

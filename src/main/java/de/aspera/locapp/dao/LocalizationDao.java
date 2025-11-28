@@ -125,7 +125,7 @@ public class LocalizationDao extends AbstractDao<Localization> {
 				queryStr.append(fullPathQuery);
 			if (emptyProperties)
 				queryStr.append(EMPTY_PROPERTIES_HQL);
-			queryStr.append(" order by target.key, target.locale asc ");
+			queryStr.append(" ORDER BY target.key ASC, target.locale ASC ");
 
 			Query query = getEntityManager().createQuery(queryStr.toString());
 			query.setParameter("version", lastVersion);
@@ -159,7 +159,7 @@ public class LocalizationDao extends AbstractDao<Localization> {
 			if (!emptyProperties) {
 				queryStr.append(NOT_EMPTY_PROPERTIES_HQL);
 			}
-			queryStr.append(" order by target.key, target.locale asc ");
+			queryStr.append(" ORDER BY target.key ASC, target.locale ASC ");
 
 			Query query = getEntityManager().createQuery(queryStr.toString());
 			query.setParameter("version", lastVersion);
@@ -182,7 +182,7 @@ public class LocalizationDao extends AbstractDao<Localization> {
 		try {
 			getEntityManager().getTransaction().begin();
 			String queryStr = "select target from " + Localization.class.getSimpleName()
-					+ " target where target.version = :version" + " order by target.key asc";
+					+ " target where target.version = :version" + " ORDER BY target.key ASC";
 			Query query = getEntityManager().createQuery(queryStr);
 			query.setParameter("version", lastVersion);
 			@SuppressWarnings("unchecked")
