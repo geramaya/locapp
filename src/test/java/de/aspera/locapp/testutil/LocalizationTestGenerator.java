@@ -33,7 +33,10 @@ public class LocalizationTestGenerator {
      */
     public static final String ORIGINAL_FR_VALUE = "Soumettre";
 
-    private static final String NAMESPACE = "app";
+    /**
+     * The namespace prefix used for generated properties files (e.g., "app" produces app.properties, app_de.properties, etc.).
+     */
+    public static final String NAMESPACE = "app";
 
     /**
      * Generates realistic properties files for testing the full roundtrip process.

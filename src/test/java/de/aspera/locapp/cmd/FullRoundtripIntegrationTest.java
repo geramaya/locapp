@@ -39,20 +39,20 @@ import de.aspera.locapp.testutil.LocalizationTestGenerator;
  */
 public class FullRoundtripIntegrationTest extends BasicFacadeTest {
 
-    private static final String TEMP_DIR = FileUtils.getTempDirectoryPath();
     private static final String MODIFIED_VALUE = "MODIFIED_VALUE_DURCH_TEST_ÄÖÜ_XYZ";
     
     private LocalizationDao locFacade;
     private Path testDataDir;
+    private Path tempBasePath;
     private File exportedFile;
 
     @Before
     public void init() throws Exception {
         locFacade = new LocalizationDao();
         
-        // Generate realistic test data
-        Path tempPath = Files.createTempDirectory("locapp_roundtrip_test");
-        testDataDir = LocalizationTestGenerator.generateRealisticPropertiesFiles(tempPath);
+        // Generate realistic test data in a unique temporary directory
+        tempBasePath = Files.createTempDirectory("locapp_roundtrip_test");
+        testDataDir = LocalizationTestGenerator.generateRealisticPropertiesFiles(tempBasePath);
         
         // Initialize configuration
         CMDCTX.addArgument("init");
@@ -81,10 +81,10 @@ public class FullRoundtripIntegrationTest extends BasicFacadeTest {
             exportedFile.delete();
         }
         
-        // Clean up test data directory
-        if (testDataDir != null) {
+        // Clean up the specific temporary base directory created for this test
+        if (tempBasePath != null) {
             try {
-                FileUtils.deleteDirectory(testDataDir.getParent().toFile());
+                FileUtils.deleteDirectory(tempBasePath.toFile());
             } catch (IOException e) {
                 logger.warning("Failed to cleanup test directory: " + e.getMessage());
             }
@@ -101,13 +101,14 @@ public class FullRoundtripIntegrationTest extends BasicFacadeTest {
      */
     @Test
     public void testFullRoundtripWithModification() throws Exception {
-        // Step 1: Export to XLSX
+        // Step 1: Export to XLSX (use the unique temp base directory)
+        String exportDir = tempBasePath.toString();
         logger.info("Step 1: Exporting to XLSX...");
         CMDCTX.addArgument("ee");
-        CMDCTX.addArgument(TEMP_DIR);
+        CMDCTX.addArgument(exportDir);
         CMDCTX.executeCommand(CMDCTX.nextArgument());
         
-        exportedFile = findExportedFile(TEMP_DIR, "-export-all.xlsx");
+        exportedFile = findExportedFile(exportDir, "-export-all.xlsx");
         Assert.assertNotNull("Exported .xlsx file should exist", exportedFile);
         logger.info("Export complete: " + exportedFile.getAbsolutePath());
         
@@ -232,10 +233,10 @@ public class FullRoundtripIntegrationTest extends BasicFacadeTest {
         Assert.assertNotNull("German localization for key '" + LocalizationTestGenerator.FIXED_KEY + "' should exist", germanEntry);
         Assert.assertEquals("German value should match the modified test string", expectedValue, germanEntry.getValue());
         
-        // Verify the value contains German Umlaute (encoding stability check)
-        Assert.assertTrue("Modified value should contain German Umlaute (ä)", expectedValue.contains("Ä"));
-        Assert.assertTrue("Modified value should contain German Umlaute (ö)", expectedValue.contains("Ö"));
-        Assert.assertTrue("Modified value should contain German Umlaute (ü)", expectedValue.contains("Ü"));
+        // Verify the value contains German uppercase Umlaute (encoding stability check)
+        Assert.assertTrue("Modified value should contain uppercase German Umlaut (Ä)", expectedValue.contains("Ä"));
+        Assert.assertTrue("Modified value should contain uppercase German Umlaut (Ö)", expectedValue.contains("Ö"));
+        Assert.assertTrue("Modified value should contain uppercase German Umlaut (Ü)", expectedValue.contains("Ü"));
         
         logger.info("German localization verified successfully: " + germanEntry.getValue());
     }
@@ -282,7 +283,7 @@ public class FullRoundtripIntegrationTest extends BasicFacadeTest {
             return null;
         }
 
-        File[] matchingFiles = dir.listFiles((d, name) -> name.endsWith(suffix));
+        File[] matchingFiles = dir.listFiles((dir1, name) -> name.endsWith(suffix));
         if (matchingFiles == null || matchingFiles.length == 0) {
             return null;
         }
