@@ -18,6 +18,7 @@ import java.util.logging.Logger;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.SystemUtils;
 
 import de.aspera.locapp.dao.DatabaseException;
 import de.aspera.locapp.dao.LocalizationDao;
@@ -77,6 +78,11 @@ public class ExportPropertiesCommand implements CommandRunnable, Runnable {
 		if (StringUtils.isEmpty(exportPath)) {
 			logger.warning("No export path found! Please define a export path.");
 			return;
+		}
+		
+		// Ensure exportPath ends with a path separator (consistent with ExcelExportCommand)
+		if (!exportPath.endsWith("/") && !exportPath.endsWith("\\")) {
+			exportPath += SystemUtils.IS_OS_WINDOWS ? "\\" : "/";
 		}
 
 		OutputStream outStream = null;
