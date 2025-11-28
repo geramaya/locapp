@@ -58,7 +58,6 @@ public class MainStart {
             commandLine = new CommandLine(new LocAppCLI());
             
             // Legacy support: still execute help through context
-            CommandContext.getInstance().executeCommand("h");
             Resources.getInstance();
             loadDatabase();
             // Start the program with init parameters (e.g. blacklist for import filenames)

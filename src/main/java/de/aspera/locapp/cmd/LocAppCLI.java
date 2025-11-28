@@ -31,7 +31,6 @@ import picocli.CommandLine.HelpCommand;
         ClearIgnoreListCommand.class,
         SetDefaultLanguageCommand.class,
         CSVImportCommand.class,
-        CSCMigrationCommand.class,
         SearchCommand.class,
         QuitCommand.class
     }
