@@ -11,7 +11,7 @@ import picocli.CommandLine.HelpCommand;
 @Command(
     name = "locapp",
     description = "LocApp - Localization Application for Properties Files",
-    version = "1.5.0-SNAPSHOT",
+    version = "2.0.0-SNAPSHOT",
     mixinStandardHelpOptions = true,
     subcommands = {
         HelpCommand.class,

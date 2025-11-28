@@ -226,7 +226,7 @@ public class MainStart {
         System.out.println("\n\n");
         BufferedImage image = new BufferedImage(144, 32, BufferedImage.TYPE_INT_RGB);
         Graphics g = image.getGraphics();
-        g.setFont(new Font("Dialog", Font.PLAIN, 15));
+        g.setFont(new Font("Dialog", Font.PLAIN, 12));
         Graphics2D graphics = (Graphics2D) g;
         graphics.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
         // the banner text may affect width and height
