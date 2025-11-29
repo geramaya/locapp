@@ -13,16 +13,16 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.poi.hssf.usermodel.HSSFPalette;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.hssf.util.HSSFColor;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.FillPatternType;
 import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
+import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 /**
  * @author Bjoern.Buchholz
@@ -34,14 +34,14 @@ public class ExcelHandler {
     private static final String    STYLE_CHANGES      = "changes";
     private static final Logger    LOGGER             = Logger.getLogger(ExcelHandler.class.getName());
 
-    private HSSFWorkbook           workbook;
+    private Workbook               workbook;
     private Map<String, CellStyle> styleMap;
     private Map<String, Sheet>     sheets;
     private List<String>           markedChanges;
     private int                    rowcounter;
 
     public ExcelHandler() {
-        workbook = new HSSFWorkbook();
+        workbook = new XSSFWorkbook();
         styleMap = new HashMap<>();
         sheets = new HashMap<>();
         markedChanges = new ArrayList<>();
@@ -51,19 +51,17 @@ public class ExcelHandler {
     }
 
     public void initStyles() {
-        HSSFPalette palette = workbook.getCustomPalette();
         CellStyle header = workbook.createCellStyle();
         CellStyle changes = workbook.createCellStyle();
-        palette.setColorAtIndex(HSSFColor.GREY_25_PERCENT.index, (byte) 217, (byte) 217, (byte) 217);
-        header.setFillForegroundColor(HSSFColor.GREY_25_PERCENT.index);
+        header.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
         header.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         Font fontHeader = workbook.createFont();
         fontHeader.setBold(true);
-        fontHeader.setColor(HSSFColor.BLACK.index);
+        fontHeader.setColor(IndexedColors.BLACK.getIndex());
         header.setFont(fontHeader);
         header.setAlignment(HorizontalAlignment.CENTER);
         this.styleMap.put(STYLE_HEADER, header);
-        changes.setFillForegroundColor(HSSFColor.LIGHT_ORANGE.index);
+        changes.setFillForegroundColor(IndexedColors.LIGHT_ORANGE.getIndex());
         changes.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         this.styleMap.put(STYLE_CHANGES, changes);
     }

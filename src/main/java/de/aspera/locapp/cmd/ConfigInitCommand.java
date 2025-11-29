@@ -9,7 +9,15 @@ import de.aspera.locapp.dao.ConfigDao;
 import de.aspera.locapp.dao.DatabaseException;
 import de.aspera.locapp.dto.Config;
 
-public class ConfigInitCommand implements CommandRunnable {
+import picocli.CommandLine.Command;
+
+@Command(
+    name = "init",
+    aliases = {"i"},
+    description = "Initialize the application with default configuration.",
+    mixinStandardHelpOptions = true
+)
+public class ConfigInitCommand implements Runnable {
 
     private static final Logger LOGGER = Logger.getLogger(ConfigInitCommand.class.getName());
 
@@ -19,7 +27,6 @@ public class ConfigInitCommand implements CommandRunnable {
     @Override
     public void run() {
         this.init();
-
     }
 
     private void init() {

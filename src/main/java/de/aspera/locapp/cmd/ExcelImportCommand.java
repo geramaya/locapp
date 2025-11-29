@@ -3,23 +3,26 @@ package de.aspera.locapp.cmd;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.poi.hssf.usermodel.HSSFDateUtil;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
 
 import de.aspera.locapp.dao.DatabaseException;
 import de.aspera.locapp.dao.LocalizationDao;
@@ -27,37 +30,89 @@ import de.aspera.locapp.dto.Localization;
 import de.aspera.locapp.dto.Localization.Status;
 import de.aspera.locapp.util.HelperUtil;
 
-public class ExcelImportCommand implements CommandRunnable {
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Parameters;
+
+@Command(
+    name = "excel-import",
+    aliases = {"ei"},
+    description = "Import properties from an excel file using MERGE strategy (inherits from previous XLS version).",
+    mixinStandardHelpOptions = true
+)
+public class ExcelImportCommand implements Runnable {
+    public static final String EMPTY_VALUE = "";
     private static final int COL_KEY = 1;
     private static final Logger logger = Logger.getLogger(ExcelExportCommand.class.getName());
     private LocalizationDao locFacade = new LocalizationDao();
     private Map<String, Integer> languagePositonMap = new HashMap<>();
 
+    @Parameters(index = "0", description = "Path to the Excel file to import", arity = "0..1")
+    private Path importFile;
+
     @Override
-    public void run() throws CommandException {
+    public void run() {
         try {
             long start = System.currentTimeMillis();
             importExcel();
             long end = System.currentTimeMillis() - start;
             logger.log(Level.INFO, "Import Excel file in ms: " + end);
         } catch (DatabaseException | IOException | CommandException exp) {
-            throw new CommandException(exp.getMessage(), exp);
+            logger.log(Level.SEVERE, exp.getMessage(), exp);
         }
+    }
+    
+    /**
+     * Sets the import file programmatically for testing or legacy support.
+     */
+    public void setImportFile(Path importFile) {
+        this.importFile = importFile;
+    }
+
+    /**
+     * Generates a unique key for a localization entry for MERGE operations.
+     * Format: fileName|key|locale
+     */
+    private String generateMergeKey(Localization loc) {
+        return loc.getFileName() + "|" + loc.getKey() + "|" + loc.getLocale();
     }
 
     private void importExcel() throws DatabaseException, IOException, CommandException {
-        String importPath = CommandContext.getInstance().nextArgument();
-        if (StringUtils.isEmpty(importPath) || !importPath.endsWith(".xls")) {
+        String importPath;
+        if (importFile != null) {
+            importPath = importFile.toString();
+        } else {
+            logger.severe("No excel file provided. Use: excel-import <path>");
+            return;
+        }
+        
+        if (StringUtils.isEmpty(importPath) || (!importPath.endsWith(".xlsx") && !importPath.endsWith(".xls"))) {
             logger.severe("No excel file found to import! Please define the full path to excel import file.");
             return;
         }
 
+        // MERGE Strategy: Load inherited entries from previous XLS version
+        int previousVersion = locFacade.lastVersion(Status.XLS);
+        int newVersion = previousVersion + 1;
+        
+        // Map to store inherited entries (keyed by fileName|key|locale)
+        Map<String, Localization> inheritedMap = new HashMap<>();
+        if (previousVersion > 0) {
+            List<Localization> inheritedLocs = locFacade.getLocalizations(previousVersion, Status.XLS, false, null);
+            logger.log(Level.INFO, "Inheriting " + inheritedLocs.size() + " entries from XLS version " + previousVersion);
+            
+            for (Localization loc : inheritedLocs) {
+                String key = generateMergeKey(loc);
+                inheritedMap.put(key, loc);
+            }
+        }
+
         FileInputStream excelFile = new FileInputStream(new File(importPath));
-        Workbook workbook = new HSSFWorkbook(excelFile);
+        Workbook workbook = WorkbookFactory.create(excelFile);
         Sheet datatypeSheet = workbook.getSheetAt(0);
         Iterator<Row> iterator = datatypeSheet.iterator();
         List<Localization> importLocs = new ArrayList<>();
-        int lastVersion = locFacade.lastVersion(Status.XLS) + 1;
+        // Track which inherited entries have been updated by Excel data
+        Set<String> updatedFromExcel = new HashSet<>();
 
         while (iterator.hasNext()) {
             Row row = iterator.next();
@@ -85,16 +140,43 @@ public class ExcelImportCommand implements CommandRunnable {
                     String fullPath = row.getCell(row.getLastCellNum() - 1).getStringCellValue();
                     loc.setFullPath(language.equals(Locale.ENGLISH.toString()) ? fullPath
                             : HelperUtil.replaceFullPath(fullPath, language));
-                    loc.setVersion(lastVersion);
+                    loc.setVersion(newVersion);
                     loc.setStatus(Localization.Status.XLS);
-                    if (!loc.getValue().equals(EMPTY_VALUE)) {
-                        importLocs.add(loc);
-                    }
+                    importLocs.add(loc);
+                    
+                    // Track this key as coming from Excel
+                    updatedFromExcel.add(generateMergeKey(loc));
                 }
             }
         }
+        
+        // Add inherited entries that were NOT in the Excel (MERGE)
+        int inheritedCount = 0;
+        for (Map.Entry<String, Localization> entry : inheritedMap.entrySet()) {
+            if (!updatedFromExcel.contains(entry.getKey())) {
+                Localization inheritedLoc = entry.getValue();
+                // Create new localization for new version
+                Localization loc = new Localization();
+                loc.setCreationDate(new Date());
+                loc.setFileName(inheritedLoc.getFileName());
+                loc.setKey(inheritedLoc.getKey());
+                loc.setValue(inheritedLoc.getValue());
+                loc.setLocale(inheritedLoc.getLocale());
+                loc.setFullPath(inheritedLoc.getFullPath());
+                loc.setVersion(newVersion);
+                loc.setStatus(Status.XLS);
+                importLocs.add(loc);
+                inheritedCount++;
+            }
+        }
+        
+        if (inheritedCount > 0) {
+            logger.log(Level.INFO, "MERGE: Added " + inheritedCount + " inherited entries not present in Excel");
+        }
+        
         locFacade.saveLocalizations(importLocs);
         workbook.close();
+        logger.log(Level.INFO, "Import complete: " + importLocs.size() + " total entries in XLS version " + newVersion);
     }
 
     private Map<String, Integer> buildLanguagePosMap(String cellValue, int cellPos) {
@@ -120,11 +202,11 @@ public class ExcelImportCommand implements CommandRunnable {
 
     private String getStringValue(Cell cell) {
         if (cell != null) {
-            switch (cell.getCellTypeEnum()) {
+            switch (cell.getCellType()) {
             case BOOLEAN:
                 return cell.getBooleanCellValue() ? "true" : "false";
             case NUMERIC:
-                if (HSSFDateUtil.isCellDateFormatted(cell) && cell.getDateCellValue() != null) {
+                if (DateUtil.isCellDateFormatted(cell) && cell.getDateCellValue() != null) {
                     return Long.toString(cell.getDateCellValue().getTime());
                 }
                 return getStringFrom(cell.getNumericCellValue());

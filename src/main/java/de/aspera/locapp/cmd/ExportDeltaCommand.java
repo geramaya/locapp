@@ -3,6 +3,7 @@
  */
 package de.aspera.locapp.cmd;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -21,14 +22,27 @@ import de.aspera.locapp.dto.Localization.Status;
 import de.aspera.locapp.util.ExcelHandler;
 import de.aspera.locapp.util.HelperUtil;
 
-public class ExportDeltaCommand implements CommandRunnable {
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Parameters;
 
+@Command(
+    name = "export-delta",
+    aliases = {"ed"},
+    description = "Export delta (properties vs. excel) into an excel file.",
+    mixinStandardHelpOptions = true
+)
+public class ExportDeltaCommand implements Runnable {
+
+    public static final String EMPTY_VALUE = "";
     private static final Logger LOGGER        = Logger.getLogger(ExportDeltaCommand.class.getName());
 
     private List<Localization>  locaDeltaList = new ArrayList<>();
     private LocalizationDao  locaFacade    = new LocalizationDao();
     private ExcelHandler        excelHandler  = new ExcelHandler();
     private List<String>        languages;
+
+    @Parameters(index = "0", description = "Export directory path", arity = "0..1")
+    private Path exportDir;
 
     @Override
     public void run() {
@@ -41,6 +55,13 @@ public class ExportDeltaCommand implements CommandRunnable {
         } catch (DatabaseException e) {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
         }
+    }
+    
+    /**
+     * Sets the export directory programmatically for testing or legacy support.
+     */
+    public void setExportDir(Path exportDir) {
+        this.exportDir = exportDir;
     }
 
     public void createDeltaRecords() throws DatabaseException {
@@ -61,8 +82,16 @@ public class ExportDeltaCommand implements CommandRunnable {
     public void runExport() throws DatabaseException {
         List<String> sheetNames = new ArrayList<>();
         List<String> headers;
-        String exportPath = CommandContext.getInstance().nextArgument();
-        String fileName = HelperUtil.currentTimestamp() + "-delta.xls";
+        String exportPath;
+        
+        if (exportDir != null) {
+            exportPath = exportDir.toString();
+        } else {
+            LOGGER.warning("No export path provided. Use: export-delta <path>");
+            return;
+        }
+        
+        String fileName = HelperUtil.currentTimestamp() + "-delta.xlsx";
 
         exportPath += SystemUtils.IS_OS_WINDOWS ? "\\" : "/";
 

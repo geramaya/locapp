@@ -8,9 +8,21 @@ import java.util.logging.Logger;
 import de.aspera.locapp.dao.ConfigDao;
 import de.aspera.locapp.dao.DatabaseException;
 
-public class SetDefaultLanguageCommand implements CommandRunnable {
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Parameters;
+
+@Command(
+    name = "set-default-language",
+    aliases = {"sdl"},
+    description = "Set default language for excel export (LANG=[en,de...]).",
+    mixinStandardHelpOptions = true
+)
+public class SetDefaultLanguageCommand implements Runnable {
     private ConfigDao configFacade = new ConfigDao();
     private Logger logger = Logger.getLogger(SetDefaultLanguageCommand.class.getName());
+
+    @Parameters(index = "0", description = "Language ISO code (e.g., de, en, fr)", arity = "0..1")
+    private String languageParam;
 
     @Override
     public void run() {
@@ -20,11 +32,24 @@ public class SetDefaultLanguageCommand implements CommandRunnable {
             logger.log(Level.SEVERE, e.getMessage(), e);
         }
     }
+    
+    /**
+     * Sets the language parameter programmatically for testing or legacy support.
+     */
+    public void setLanguageParam(String languageParam) {
+        this.languageParam = languageParam;
+    }
 
     private void setDefaultLanguage() 
         throws CommandException, DatabaseException {
-        String selectedLanguage = CommandContext.getInstance()
-			    .nextArgument();
+        String selectedLanguage;
+        if (languageParam != null) {
+            selectedLanguage = languageParam;
+        } else {
+            // Use default language if not provided
+            selectedLanguage = ConfigDao.DEFAULT_LANGUAGE.toLowerCase();
+        }
+        
 		var language = selectedLanguage != null ? selectedLanguage.toLowerCase()
 				: ConfigDao.DEFAULT_LANGUAGE.toLowerCase();
 		

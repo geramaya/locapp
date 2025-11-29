@@ -7,9 +7,11 @@ package de.aspera.locapp.dao;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.logging.Level;
@@ -17,7 +19,7 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.persistence.Query;
+import jakarta.persistence.Query;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -125,7 +127,7 @@ public class LocalizationDao extends AbstractDao<Localization> {
 				queryStr.append(fullPathQuery);
 			if (emptyProperties)
 				queryStr.append(EMPTY_PROPERTIES_HQL);
-			queryStr.append(" order by target.key, target.locale asc ");
+			queryStr.append(" ORDER BY target.key ASC, target.locale ASC ");
 
 			Query query = getEntityManager().createQuery(queryStr.toString());
 			query.setParameter("version", lastVersion);
@@ -159,7 +161,7 @@ public class LocalizationDao extends AbstractDao<Localization> {
 			if (!emptyProperties) {
 				queryStr.append(NOT_EMPTY_PROPERTIES_HQL);
 			}
-			queryStr.append(" order by target.key, target.locale asc ");
+			queryStr.append(" ORDER BY target.key ASC, target.locale ASC ");
 
 			Query query = getEntityManager().createQuery(queryStr.toString());
 			query.setParameter("version", lastVersion);
@@ -182,7 +184,7 @@ public class LocalizationDao extends AbstractDao<Localization> {
 		try {
 			getEntityManager().getTransaction().begin();
 			String queryStr = "select target from " + Localization.class.getSimpleName()
-					+ " target where target.version = :version" + " order by target.key asc";
+					+ " target where target.version = :version" + " ORDER BY target.key ASC";
 			Query query = getEntityManager().createQuery(queryStr);
 			query.setParameter("version", lastVersion);
 			@SuppressWarnings("unchecked")
@@ -302,6 +304,133 @@ public class LocalizationDao extends AbstractDao<Localization> {
 			throw new DatabaseException(e.getMessage(), e);
 		}
 
+	}
+
+	/**
+	 * Search for localizations where key or value contains the query string
+	 * (case-insensitive). Returns all translations for matching keys, including
+	 * versions in other languages that didn't match the query directly.
+	 *
+	 * @param query the search term
+	 * @return list of localizations matching the search criteria
+	 * @throws DatabaseException if database access fails
+	 */
+	public List<Localization> searchLocalizations(String query) throws DatabaseException {
+		if (StringUtils.isEmpty(query)) {
+			return new ArrayList<>();
+		}
+
+		try {
+			String lowerQuery = query.toLowerCase();
+
+			// Use a subquery to find all translations for keys that match the search.
+			// This avoids building a query with many OR conditions which can cause
+			// StackOverflowError in EclipseLink's JPQL parser for queries matching many keys.
+			String searchQuery = "SELECT target FROM " + Localization.class.getSimpleName() + " target "
+					+ "WHERE EXISTS ("
+					+ "  SELECT 1 FROM " + Localization.class.getSimpleName() + " match "
+					+ "  WHERE match.key = target.key AND match.fileName = target.fileName "
+					+ "  AND (LOWER(match.key) LIKE :query OR LOWER(match.value) LIKE :query)"
+					+ ") "
+					+ "ORDER BY target.fileName, target.key, target.locale";
+
+			Query fetchAllQ = getEntityManager().createQuery(searchQuery);
+			fetchAllQ.setParameter("query", "%" + lowerQuery + "%");
+
+			@SuppressWarnings("unchecked")
+			List<Localization> locs = (List<Localization>) fetchAllQ.getResultList();
+
+			return fileIgnoring ? filterIgnoredEntries(locs, loc -> loc.getFileName()) : locs;
+		} catch (Exception e) {
+			throw new DatabaseException(e.getMessage(), e);
+		}
+	}
+
+	/**
+	 * Returns localizations from version2 that have different values compared to the same
+	 * key/locale/filename entry in version1. This is used for delta exports to identify
+	 * which files have actually changed between versions.
+	 * 
+	 * If version1 doesn't exist (is 0 or has no entries), returns all entries from version2.
+	 *
+	 * @param version1 The base version to compare from (older version)
+	 * @param version2 The target version to compare to (newer version)
+	 * @param status The status to compare (typically SRC)
+	 * @return List of localizations from version2 that differ from version1
+	 * @throws DatabaseException if database access fails
+	 */
+	public List<Localization> getLocalizationDifferences(int version1, int version2, Status status) throws DatabaseException {
+		try {
+			// Get all localizations from version2
+			List<Localization> version2Locs = getLocalizations(version2, status, false, null);
+			
+			// If version1 is 0 or doesn't exist, return all entries from version2
+			if (version1 <= 0) {
+				logger.log(Level.INFO, "No previous version found, returning all " + version2Locs.size() + " entries from version " + version2);
+				return version2Locs;
+			}
+			
+			// Get all localizations from version1
+			List<Localization> version1Locs = getLocalizations(version1, status, false, null);
+			
+			if (version1Locs.isEmpty()) {
+				logger.log(Level.INFO, "Previous version " + version1 + " is empty, returning all " + version2Locs.size() + " entries from version " + version2);
+				return version2Locs;
+			}
+			
+			// Create a lookup map for version1 entries (key: fileName|key|locale -> value)
+			Map<String, String> version1Map = new HashMap<>();
+			for (Localization loc : version1Locs) {
+				String mapKey = loc.getFileName() + "|" + loc.getKey() + "|" + loc.getLocale();
+				version1Map.put(mapKey, loc.getValue() != null ? loc.getValue() : "");
+			}
+			
+			// Find differences: entries in version2 that don't exist in version1 OR have different values
+			List<Localization> differences = new ArrayList<>();
+			for (Localization loc : version2Locs) {
+				String mapKey = loc.getFileName() + "|" + loc.getKey() + "|" + loc.getLocale();
+				String v1Value = version1Map.get(mapKey);
+				String v2Value = loc.getValue() != null ? loc.getValue() : "";
+				
+				// Include if: not in v1, or value is different
+				if (v1Value == null || !v1Value.equals(v2Value)) {
+					differences.add(loc);
+				}
+			}
+			
+			logger.log(Level.INFO, "Found " + differences.size() + " differences between version " + version1 + " and version " + version2);
+			return differences;
+		} catch (Exception e) {
+			throw new DatabaseException(e.getMessage(), e);
+		}
+	}
+
+	/**
+	 * Returns the two most recent versions for a given status.
+	 * 
+	 * @param status The status to query
+	 * @return An array of two integers: [latestVersion, previousVersion]. 
+	 *         If only one version exists, previousVersion will be 0.
+	 * @throws DatabaseException if database access fails
+	 */
+	public int[] getLastTwoVersions(Status status) throws DatabaseException {
+		try {
+			String queryStr = "SELECT DISTINCT target.version FROM " + Localization.class.getSimpleName()
+					+ " target WHERE target.status = :status ORDER BY target.version DESC";
+			Query query = getEntityManager().createQuery(queryStr);
+			query.setParameter("status", status);
+			query.setMaxResults(2);
+			
+			@SuppressWarnings("unchecked")
+			List<Integer> versions = (List<Integer>) query.getResultList();
+			
+			int latestVersion = versions.isEmpty() ? 0 : versions.get(0);
+			int previousVersion = versions.size() > 1 ? versions.get(1) : 0;
+			
+			return new int[] { latestVersion, previousVersion };
+		} catch (Exception e) {
+			throw new DatabaseException(e.getMessage(), e);
+		}
 	}
 
 }

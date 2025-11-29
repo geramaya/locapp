@@ -8,9 +8,9 @@ package de.aspera.locapp.dao;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.Persistence;
 
 import de.aspera.locapp.util.Resources;
 
@@ -33,7 +33,12 @@ public class H2DatabaseManager {
     public static H2DatabaseManager getInstance() {
         if (instance == null) {
             instance = new H2DatabaseManager();
-            instance.init();
+            try {
+                instance.init();
+            } catch (Exception e) {
+                instance = null; // Reset instance on failure
+                throw e;
+            }
         }
         return instance;
     }
@@ -52,20 +57,31 @@ public class H2DatabaseManager {
 
         // AUTO_SERVER=TRUE erm�glicht den Zugriff f�r mehrere Apps auf die
         // gleich Datenbank!
-        databaseProperties.put("javax.persistence.jdbc.url",
+        databaseProperties.put("jakarta.persistence.jdbc.url",
                 "jdbc:h2:~/." + Resources.PROJECT_NAME + "/"
                         + (dbname != null ? dbname.toString() : Resources.getInstance().getProperty("db-name"))
-                        + ";AUTO_SERVER=TRUE");
-        databaseProperties.put("javax.persistence.jdbc.user", Resources.getInstance().getProperty("db-user"));
-        databaseProperties.put("javax.persistence.jdbc.password", Resources.getInstance().getProperty("db-password"));
+                        + ";AUTO_SERVER=TRUE;NON_KEYWORDS=KEY,VALUE");
+        databaseProperties.put("jakarta.persistence.jdbc.user", Resources.getInstance().getProperty("db-user"));
+        databaseProperties.put("jakarta.persistence.jdbc.password", Resources.getInstance().getProperty("db-password"));
 
-        databaseProperties.put("javax.persistence.jdbc.driver", "org.h2.Driver");
-        databaseProperties.put("javax.persistence.schema-generation.database.action", dbaction.toString());
+        databaseProperties.put("jakarta.persistence.jdbc.driver", "org.h2.Driver");
+        databaseProperties.put("jakarta.persistence.schema-generation.database.action", dbaction.toString());
         // databaseProperties.put("eclipselink.logging.level", "WARNING");
         // databaseProperties.put("eclipselink.logging.parameters", "true");
 
-        EntityManagerFactory factory = Persistence.createEntityManagerFactory("h2locapp", databaseProperties);
-        theManager = factory.createEntityManager();
+        try {
+            EntityManagerFactory factory = Persistence.createEntityManagerFactory("h2locapp", databaseProperties);
+            theManager = factory.createEntityManager();
+        } catch (Exception e) {
+            String errorMsg = e.getMessage();
+            if (errorMsg != null && errorMsg.contains("Unsupported database file version")) {
+                throw new RuntimeException(
+                    "H2 database file is incompatible with H2 2.x. " +
+                    "Please delete the old database files in ~/.locapp/ or backup and migrate your data. " +
+                    "Database location: " + databaseProperties.get("jakarta.persistence.jdbc.url"), e);
+            }
+            throw new RuntimeException("Failed to initialize H2 database: " + errorMsg, e);
+        }
     }
 
     public EntityManager getEntityManager() {

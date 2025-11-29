@@ -2,6 +2,7 @@ package de.aspera.locapp.cmd;
 
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -21,21 +22,52 @@ import de.aspera.locapp.dto.Localization;
 import de.aspera.locapp.dto.Localization.Status;
 import de.aspera.locapp.util.HelperUtil;
 
-public class CSVImportCommand implements CommandRunnable {
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Parameters;
 
+@Command(
+    name = "csv-import",
+    aliases = {"csvin"},
+    description = "Import properties as CSV formatted file.",
+    mixinStandardHelpOptions = true
+)
+public class CSVImportCommand implements Runnable {
+
+	public static final String EMPTY_VALUE = "";
 	private static final Logger logger = Logger.getLogger(CSVImportCommand.class.getName());
 	private LocalizationDao locFacade = new LocalizationDao();
 
+	@Parameters(index = "0", description = "Path to the CSV file to import", arity = "0..1")
+	private Path csvFile;
+
 	@Override
-	public void run() throws CommandException {
-		long start = System.currentTimeMillis();
-		importCSV();
-		long end = System.currentTimeMillis() - start;
-		logger.log(Level.INFO, "Import CSV file in ms: " + end);
+	public void run() {
+		try {
+			long start = System.currentTimeMillis();
+			importCSV();
+			long end = System.currentTimeMillis() - start;
+			logger.log(Level.INFO, "Import CSV file in ms: " + end);
+		} catch (CommandException e) {
+			logger.log(Level.SEVERE, e.getMessage(), e);
+		}
+	}
+	
+	/**
+	 * Sets the CSV file programmatically for testing or legacy support.
+	 */
+	public void setCsvFile(Path csvFile) {
+		this.csvFile = csvFile;
 	}
 
 	private void importCSV() throws CommandException {
-		String importPath = CommandContext.getInstance().nextArgument();
+		String importPath;
+		if (csvFile != null) {
+			importPath = csvFile.toString();
+		} else {
+			logger.severe("No csv file provided. Use: csv-import <path>");
+			return;
+		}
+		
 		if (StringUtils.isEmpty(importPath) || !FileUtils.getFile(importPath).exists()) {
 			logger.severe("No csv file found to import! Please define the full path to csv import file.");
 			return;

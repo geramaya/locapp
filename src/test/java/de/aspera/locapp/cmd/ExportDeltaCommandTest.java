@@ -7,11 +7,11 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -34,35 +34,23 @@ public class ExportDeltaCommandTest extends BasicFacadeTest {
     @Before
     public void init() throws InstantiationException, IllegalAccessException, IOException, DatabaseException, CommandException {
         String testfiles = ExcelExportCommandTest.class.getClassLoader().getResource("deltatest").getFile();
-        String xlsfile = ExcelImportCommandTest.class.getClassLoader().getResource("slc_excel_to_import.xls").getFile();
+        String xlsfile = ExcelImportCommandTest.class.getClassLoader().getResource("slc_excel_to_import.xlsx").getFile();
 
-        CMDCTX.addArgument("init");
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
-
-        CMDCTX.addArgument("cl");
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
-
-        CMDCTX.addArgument("files");
-        CMDCTX.addArgument(testfiles);
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
-
-        CMDCTX.addArgument("ip");
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("init");
+        executeCommand("clear-loc");
+        executeCommand("files", testfiles);
+        executeCommand("import-properties");
 
         updateFullPath(xlsfile);
 
-        CMDCTX.addArgument("ei");
-        CMDCTX.addArgument(xlsfile);
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("excel-import", xlsfile);
 
     }
 
     @Ignore
     @Test
     public void exportDelta() throws InstantiationException, IllegalAccessException, IOException, CommandException {
-        CMDCTX.addArgument("ed");
-        CMDCTX.addArgument(TEMP_DIR);
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("export-delta", TEMP_DIR);
         logger.info("saved in: " + TEMP_DIR);
 
         Cell cell = getCell(2, 5);
@@ -73,8 +61,8 @@ public class ExportDeltaCommandTest extends BasicFacadeTest {
     }
 
     private Cell getCell(int rownum, int colnum) throws IOException {
-        FileInputStream file = new FileInputStream(TEMP_DIR + "/delta.xls");
-        Workbook wb = new HSSFWorkbook(file);
+        FileInputStream file = new FileInputStream(TEMP_DIR + "/delta.xlsx");
+        Workbook wb = WorkbookFactory.create(file);
         Sheet sheet = wb.getSheetAt(0);
         Row row = sheet.getRow(rownum);
         Cell cell = row.getCell(colnum);
@@ -84,7 +72,7 @@ public class ExportDeltaCommandTest extends BasicFacadeTest {
 
     private void updateFullPath(String xlsPath) throws IOException, DatabaseException {
         FileInputStream file = new FileInputStream(xlsPath);
-        Workbook wb = new HSSFWorkbook(file);
+        Workbook wb = WorkbookFactory.create(file);
         Sheet sheet = wb.getSheetAt(0);
         Iterator<Row> rows = sheet.iterator();
         LocalizationDao locaFacade = new LocalizationDao();

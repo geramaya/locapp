@@ -3,6 +3,7 @@ package de.aspera.locapp.cmd;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -16,18 +17,16 @@ import java.util.logging.Logger;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
-import org.apache.poi.hssf.usermodel.HSSFCellStyle;
-import org.apache.poi.hssf.usermodel.HSSFFont;
-import org.apache.poi.hssf.usermodel.HSSFPalette;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.hssf.util.HSSFColor;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.FillPatternType;
 import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
+import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import de.aspera.locapp.dao.ConfigDao;
 import de.aspera.locapp.dao.DatabaseException;
@@ -36,8 +35,19 @@ import de.aspera.locapp.dto.Localization;
 import de.aspera.locapp.dto.Localization.Status;
 import de.aspera.locapp.util.HelperUtil;
 
-public class ExcelExportCommand implements CommandRunnable {
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Option;
+import picocli.CommandLine.Parameters;
 
+@Command(
+    name = "excel-export",
+    aliases = {"ee"},
+    description = "Export properties into an excel file (all or by language ISOCODE, search for empty values).",
+    mixinStandardHelpOptions = true
+)
+public class ExcelExportCommand implements Runnable {
+
+    public static final String EMPTY_VALUE = "";
     private static final String    HEADER        = "header";
     private static final String    STYLE_YELLOW  = "style_yellow";
     private static final int       ROWGAP_HEADER = 0;
@@ -47,26 +57,33 @@ public class ExcelExportCommand implements CommandRunnable {
     private Map<String, CellStyle> styleMap      = new HashMap<>();
     private String                 fileName;
 
-    public void initStyles(HSSFWorkbook wb) {
-        HSSFPalette palette = wb.getCustomPalette();
+    @Parameters(index = "0", description = "Export directory path", arity = "0..1")
+    private Path exportPath;
+
+    @Option(names = {"-l", "--language"}, description = "Language ISO code (e.g., de, en, fr)")
+    private String language;
+
+    @Option(names = {"-e", "--empty"}, description = "Export only empty properties", defaultValue = "false")
+    private boolean emptyProperties;
+
+    public void initStyles(Workbook wb) {
         CellStyle header = wb.createCellStyle();
-        palette.setColorAtIndex(HSSFColor.GREY_25_PERCENT.index, (byte) 217, (byte) 217, (byte) 217);
-        header.setFillForegroundColor(HSSFColor.GREY_25_PERCENT.index);
+        header.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
         header.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         Font font_header = wb.createFont();
-        font_header.setBoldweight(HSSFFont.BOLDWEIGHT_BOLD);
-        font_header.setColor(HSSFColor.BLACK.index);
+        font_header.setBold(true);
+        font_header.setColor(IndexedColors.BLACK.getIndex());
         header.setFont(font_header);
         header.setAlignment(HorizontalAlignment.CENTER);
 
         CellStyle style_yellow = wb.createCellStyle();
-        style_yellow.setFillForegroundColor(HSSFColor.YELLOW.index);
-        style_yellow.setFillPattern(HSSFCellStyle.SOLID_FOREGROUND);
+        style_yellow.setFillForegroundColor(IndexedColors.YELLOW.getIndex());
+        style_yellow.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         Font font_green = wb.createFont();
-        font_green.setBoldweight(HSSFFont.BOLDWEIGHT_BOLD);
-        font_green.setColor(HSSFColor.GREEN.index);
+        font_green.setBold(true);
+        font_green.setColor(IndexedColors.GREEN.getIndex());
         style_yellow.setFont(font_green);
-        style_yellow.setAlignment(CellStyle.ALIGN_LEFT);
+        style_yellow.setAlignment(HorizontalAlignment.LEFT);
 
         this.styleMap.put(HEADER, header);
         this.styleMap.put(STYLE_YELLOW, style_yellow);
@@ -84,12 +101,50 @@ public class ExcelExportCommand implements CommandRunnable {
     public void run() {
         try {
             long start = System.currentTimeMillis();
-            doExport(CommandContext.getInstance().allArguments());
+            
+            if (exportPath == null) {
+                logger.warning("No export path provided. Use: excel-export <path>");
+                return;
+            }
+            
+            // Build options array from Picocli parameters
+            List<String> optionList = new ArrayList<>();
+            optionList.add(exportPath.toString());
+            if (language != null) {
+                optionList.add(language);
+            }
+            if (emptyProperties) {
+                optionList.add("1");
+            }
+            String[] options = optionList.toArray(new String[0]);
+            
+            doExport(options);
             long end = System.currentTimeMillis() - start;
             logger.log(Level.INFO, "Export Excel file in ms: " + end);
         } catch (IOException | DatabaseException e) {
             logger.log(Level.SEVERE, e.getMessage(), e);
         }
+    }
+    
+    /**
+     * Sets the export path programmatically for testing or legacy support.
+     */
+    public void setExportPath(Path exportPath) {
+        this.exportPath = exportPath;
+    }
+    
+    /**
+     * Sets the language programmatically for testing or legacy support.
+     */
+    public void setLanguage(String language) {
+        this.language = language;
+    }
+    
+    /**
+     * Sets the empty properties flag programmatically for testing or legacy support.
+     */
+    public void setEmptyProperties(boolean emptyProperties) {
+        this.emptyProperties = emptyProperties;
     }
 
     private void doExport(String... options) throws IOException, DatabaseException {
@@ -119,9 +174,9 @@ public class ExcelExportCommand implements CommandRunnable {
         }
 
         if (language != null) {
-            fileName = HelperUtil.currentTimestamp() + "-export-" + language + ".xls";
+            fileName = HelperUtil.currentTimestamp() + "-export-" + language + ".xlsx";
         } else {
-            fileName = HelperUtil.currentTimestamp() + "-export-all.xls";
+            fileName = HelperUtil.currentTimestamp() + "-export-all.xlsx";
         }
         
         Locale defaultLocale = Locale.ENGLISH;
@@ -137,7 +192,7 @@ public class ExcelExportCommand implements CommandRunnable {
         exportPath += SystemUtils.IS_OS_WINDOWS ? "\\" : "/";
         int rowcount = ROWGAP_HEADER;
 
-        HSSFWorkbook wb = new HSSFWorkbook();
+        Workbook wb = new XSSFWorkbook();
         initStyles(wb);
         Sheet sheet = wb.createSheet("SLC Properties");
         List<Sheet> sheets = new ArrayList<>();

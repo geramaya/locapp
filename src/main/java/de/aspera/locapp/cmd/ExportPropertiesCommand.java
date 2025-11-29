@@ -4,9 +4,11 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
@@ -17,6 +19,7 @@ import java.util.logging.Logger;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.SystemUtils;
 
 import de.aspera.locapp.dao.DatabaseException;
 import de.aspera.locapp.dao.LocalizationDao;
@@ -24,30 +27,76 @@ import de.aspera.locapp.dto.Localization;
 import de.aspera.locapp.dto.Localization.Status;
 import de.aspera.locapp.util.HelperUtil;
 
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Option;
+import picocli.CommandLine.Parameters;
+
 /**
  * This class export all property files into a directory.
  *
  * @author Daniel.Weiss
  *
  */
-public class ExportPropertiesCommand implements CommandRunnable {
+@Command(
+    name = "export-properties",
+    aliases = {"ep"},
+    description = "Iterate known properties and save into directory. Use --delta to export only modified files.",
+    mixinStandardHelpOptions = true
+)
+public class ExportPropertiesCommand implements Runnable {
 
+	public static final String EMPTY_VALUE = "";
 	private static final Logger logger = Logger.getLogger(ExportPropertiesCommand.class.getName());
 	private LocalizationDao locFacade = new LocalizationDao();
 	private List<Localization> allLocalizations;
 
+	@Parameters(index = "0", description = "Export directory path", arity = "0..1")
+	private Path exportDir;
+
+	@Option(names = {"-d", "--delta"}, description = "Export only files containing keys modified since the previous SRC version.")
+	private boolean deltaExport;
+
 	@Override
-	public void run() throws CommandException {
-		exportPropertiesFiles();
+	public void run() {
+		try {
+			exportPropertiesFiles();
+		} catch (CommandException e) {
+			logger.log(Level.SEVERE, e.getMessage(), e);
+		}
+	}
+	
+	/**
+	 * Sets the export directory programmatically for testing or legacy support.
+	 */
+	public void setExportDir(Path exportDir) {
+		this.exportDir = exportDir;
+	}
+
+	/**
+	 * Sets the delta export flag programmatically for testing.
+	 */
+	public void setDeltaExport(boolean deltaExport) {
+		this.deltaExport = deltaExport;
 	}
 
 	private void exportPropertiesFiles() throws CommandException {
 		long start = System.currentTimeMillis();
-		String exportPath = CommandContext.getInstance().nextArgument();
+		String exportPath;
+		if (exportDir != null) {
+			exportPath = exportDir.toString();
+		} else {
+			logger.warning("No export path provided. Use: export-properties <path>");
+			return;
+		}
 
 		if (StringUtils.isEmpty(exportPath)) {
 			logger.warning("No export path found! Please define a export path.");
 			return;
+		}
+		
+		// Ensure exportPath ends with a path separator (consistent with ExcelExportCommand)
+		if (!exportPath.endsWith("/") && !exportPath.endsWith("\\")) {
+			exportPath += SystemUtils.IS_OS_WINDOWS ? "\\" : "/";
 		}
 
 		OutputStream outStream = null;
@@ -58,12 +107,29 @@ public class ExportPropertiesCommand implements CommandRunnable {
 			Set<String> defaultPathFiles = locFacade.getFiles(Locale.ENGLISH, true);
 			List<String> languages = locFacade.getLanguages(true);
 
+			// For delta export, determine which files contain modified keys
+			Set<String> modifiedFiles = new HashSet<>();
+			if (deltaExport) {
+				modifiedFiles = getFilesWithModifiedKeys();
+				if (modifiedFiles.isEmpty()) {
+					logger.info("Delta export: No files have modified keys. Nothing to export.");
+					return;
+				}
+				logger.info("Delta export: " + modifiedFiles.size() + " files contain modified keys.");
+			}
+
+			int filesExported = 0;
 			for (String defaultPathFile : defaultPathFiles) {
 				for (String local : languages) {
 					if (skipPropertyFile(defaultPathFile, languages)) {
 						continue; // skip unnecessary languages and files
 					}
 					String replacedFile = replaceFilePathWithLocale(defaultPathFile, local);
+
+					// Delta export: skip files that don't contain modified keys
+					if (deltaExport && !modifiedFiles.contains(HelperUtil.removeLanguageFromPath(replacedFile))) {
+						continue;
+					}
 
 					File exportPropertyFile = new File(exportPath + replacedFile);
 					Properties prop = new Properties() {
@@ -157,5 +223,33 @@ public class ExportPropertiesCommand implements CommandRunnable {
 			}
 		}
 		return locs;
+	}
+
+	/**
+	 * Gets the set of files that contain modified keys between the last two SRC versions.
+	 * Returns the base file paths (without language suffixes).
+	 */
+	private Set<String> getFilesWithModifiedKeys() throws DatabaseException {
+		int[] versions = locFacade.getLastTwoVersions(Status.SRC);
+		int latestVersion = versions[0];
+		int previousVersion = versions[1];
+		
+		if (latestVersion == 0) {
+			logger.warning("No SRC versions found for delta comparison.");
+			return new HashSet<>();
+		}
+		
+		logger.info("Delta comparison: SRC v" + previousVersion + " -> SRC v" + latestVersion);
+		
+		List<Localization> differences = locFacade.getLocalizationDifferences(previousVersion, latestVersion, Status.SRC);
+		
+		// Collect unique base file paths (without language suffix)
+		Set<String> modifiedFiles = new HashSet<>();
+		for (Localization loc : differences) {
+			String basePath = HelperUtil.removeLanguageFromPath(loc.getFullPath());
+			modifiedFiles.add(basePath);
+		}
+		
+		return modifiedFiles;
 	}
 }
