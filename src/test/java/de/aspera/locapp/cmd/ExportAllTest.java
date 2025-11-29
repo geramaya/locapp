@@ -2,6 +2,7 @@ package de.aspera.locapp.cmd;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FilenameFilter;
 
 import org.apache.poi.ss.usermodel.*;
 import org.apache.commons.io.FileUtils;
@@ -18,12 +19,15 @@ import static org.junit.Assert.*;
 public class ExportAllTest extends BasicFacadeTest {
 
     private static final String TEMP_DIR = FileUtils.getTempDirectoryPath();
+    
+    /** Filter for export-all xlsx files */
+    private static final FilenameFilter EXPORT_ALL_FILTER = 
+        (dir, name) -> name.contains("export-all") && name.endsWith(".xlsx");
 
     @Before
     public void init() throws Exception {
         // Clean up any old export-all files from previous test runs
-        File[] oldFiles = new File(TEMP_DIR).listFiles((dir, name) -> 
-            name.contains("export-all") && name.endsWith(".xlsx"));
+        File[] oldFiles = new File(TEMP_DIR).listFiles(EXPORT_ALL_FILTER);
         if (oldFiles != null) {
             for (File f : oldFiles) {
                 f.delete();
@@ -42,8 +46,7 @@ public class ExportAllTest extends BasicFacadeTest {
         executeCommand("excel-export", TEMP_DIR);
         
         // Find exported file
-        File[] files = new File(TEMP_DIR).listFiles((dir, name) -> 
-            name.contains("export-all") && name.endsWith(".xlsx"));
+        File[] files = new File(TEMP_DIR).listFiles(EXPORT_ALL_FILTER);
         assertNotNull("Export file should exist", files);
         assertEquals("Should have exactly one export file", 1, files.length);
         
@@ -81,9 +84,6 @@ public class ExportAllTest extends BasicFacadeTest {
                     if (keyCell != null) {
                         String key = keyCell.getStringCellValue();
                         String enValue = enCell != null ? enCell.getStringCellValue() : "";
-                        
-                        // Print for debugging
-                        System.out.println("Key: " + key + ", VALUE_EN: " + enValue);
                         
                         // Verify EN values are correctly exported
                         // test.properties has: key.foobar, key.foobar1, key.foobar2, key.foobar3 all with EN values
