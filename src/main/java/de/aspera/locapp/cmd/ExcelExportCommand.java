@@ -323,17 +323,21 @@ public class ExcelExportCommand implements Runnable {
     private Localization getLoc(List<Localization> allLocalizations, String fullPath, String key, String language) {
         Localization loc = searchLocation(allLocalizations, fullPath, key, language);
         if (loc == null) {
-            loc = searchLocation(allLocalizations, HelperUtil.removeLanguageFromPath(fullPath), key, language);
-            if (loc == null) {
+            Localization fallbackLoc = searchLocation(allLocalizations, HelperUtil.removeLanguageFromPath(fullPath), key, language);
+            if (fallbackLoc == null) {
                 loc = new Localization();
                 loc.setValue(EMPTY_VALUE);
                 return loc;
             }
+            // Found a fallback localization (e.g., EN), but the translation for this language is missing
+            // Create a new Localization object to avoid modifying the original
+            loc = new Localization();
             loc.setKey(key);
             loc.setValue(EMPTY_VALUE);
             if (language != null) {
                 loc.setLocale(language.toLowerCase());
             }
+            return loc;
         }
         locFacade.detach(loc);
         return loc;
