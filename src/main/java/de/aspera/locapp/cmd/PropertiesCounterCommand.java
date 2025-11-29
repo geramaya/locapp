@@ -20,7 +20,7 @@ import picocli.CommandLine.Parameters;
     description = "Count the amount of properties (all or by language ISOCODE, search for empty values).",
     mixinStandardHelpOptions = true
 )
-public class PropertiesCounterCommand implements CommandRunnable, Runnable {
+public class PropertiesCounterCommand implements Runnable {
 
     private static final Logger logger = Logger.getLogger(PropertiesCounterCommand.class.getName());
     private LocalizationDao locFacade = new LocalizationDao();
@@ -37,11 +37,11 @@ public class PropertiesCounterCommand implements CommandRunnable, Runnable {
     @Override
     public void run() {
         try {
-            // Handle Picocli parameters or fall back to legacy CommandContext
+            // Use Picocli parameters
             if (type != null) {
                 countPropertiesWithPicocli();
             } else {
-                countProperties(CommandContext.getInstance().allArguments());
+                logger.log(Level.WARNING, "No type provided. Use: properties-count <SRC|XLS>");
             }
         } catch (Exception e) {
             logger.log(Level.SEVERE, e.getMessage(), e);

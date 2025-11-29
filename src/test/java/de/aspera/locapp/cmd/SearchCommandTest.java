@@ -24,18 +24,10 @@ public class SearchCommandTest extends BasicFacadeTest {
     public void init() throws InstantiationException, IllegalAccessException, CommandException {
         String testfiles = SearchCommandTest.class.getClassLoader().getResource("testfiles").getFile();
 
-        CMDCTX.addArgument("init");
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
-
-        CMDCTX.addArgument("files");
-        CMDCTX.addArgument(testfiles);
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
-
-        CMDCTX.addArgument("cl");
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
-
-        CMDCTX.addArgument("ip");
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("init");
+        executeCommand("files", testfiles);
+        executeCommand("clear-loc");
+        executeCommand("import-properties");
 
         localizationDao = new LocalizationDao();
     }

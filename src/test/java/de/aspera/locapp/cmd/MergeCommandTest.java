@@ -13,29 +13,20 @@ public class MergeCommandTest extends BasicFacadeTest {
     @Before
     public void init() throws InstantiationException, IllegalAccessException, CommandException {
 
-        CMDCTX.addArgument("init");
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
-
-        CMDCTX.addArgument("cl");
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("init");
+        executeCommand("clear-loc");
 
         String[] files = new String[]{"export_all_edit.xlsx", "export_de_edit.xlsx", "export_it_edit.xlsx"};
         for (String file : files) {
-            CMDCTX.addArgument("ei");
             String filePath = ExcelImportCommandTest.class.getClassLoader().getResource(file).getFile();
-            CMDCTX.addArgument(filePath);
-            CMDCTX.executeCommand(CMDCTX.nextArgument());
+            executeCommand("excel-import", filePath);
         }
     }
 
     @Test
     public void countSRCPropertiesFiles()
             throws InstantiationException, IllegalAccessException, IOException, DatabaseException, CommandException {
-        CMDCTX.addArgument("mp");
-        CMDCTX.addArgument("xls");
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
-
-
+        executeCommand("merge-properties", "xls");
     }
 
     @Override

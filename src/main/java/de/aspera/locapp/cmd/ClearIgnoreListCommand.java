@@ -14,7 +14,7 @@ import picocli.CommandLine.Command;
     description = "Clear list with ignored files.",
     mixinStandardHelpOptions = true
 )
-public class ClearIgnoreListCommand implements CommandRunnable, Runnable {
+public class ClearIgnoreListCommand implements Runnable {
     private static final Logger logger = Logger.getLogger(ClearIgnoreListCommand.class.getName());
 
     @Override

@@ -24,7 +24,7 @@ import picocli.CommandLine.Parameters;
     description = "Read recursive down for properties files and save fileinfo.",
     mixinStandardHelpOptions = true
 )
-public class FilesCommand implements CommandRunnable, Runnable {
+public class FilesCommand implements Runnable {
 
     private static final Logger logger = Logger.getLogger(FilesCommand.class.getName());
 
@@ -36,13 +36,7 @@ public class FilesCommand implements CommandRunnable, Runnable {
         if (path != null) {
             listFiles(path.toString());
         } else {
-            // Legacy support: try to get from CommandContext
-            String legacyPath = CommandContext.getInstance().nextArgument();
-            if (legacyPath != null) {
-                listFiles(legacyPath);
-            } else {
-                logger.warning("No path found for command: (f)iles");
-            }
+            logger.warning("No path provided. Use: files <path>");
         }
     }
 

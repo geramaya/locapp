@@ -45,8 +45,9 @@ import picocli.CommandLine.Parameters;
     description = "Export properties into an excel file (all or by language ISOCODE, search for empty values).",
     mixinStandardHelpOptions = true
 )
-public class ExcelExportCommand implements CommandRunnable, Runnable {
+public class ExcelExportCommand implements Runnable {
 
+    public static final String EMPTY_VALUE = "";
     private static final String    HEADER        = "header";
     private static final String    STYLE_YELLOW  = "style_yellow";
     private static final int       ROWGAP_HEADER = 0;
@@ -101,23 +102,21 @@ public class ExcelExportCommand implements CommandRunnable, Runnable {
         try {
             long start = System.currentTimeMillis();
             
-            // Handle Picocli parameters or fall back to legacy CommandContext
-            String[] options;
-            if (exportPath != null) {
-                // Using Picocli parameters
-                List<String> optionList = new ArrayList<>();
-                optionList.add(exportPath.toString());
-                if (language != null) {
-                    optionList.add(language);
-                }
-                if (emptyProperties) {
-                    optionList.add("1");
-                }
-                options = optionList.toArray(new String[0]);
-            } else {
-                // Legacy support: use CommandContext
-                options = CommandContext.getInstance().allArguments();
+            if (exportPath == null) {
+                logger.warning("No export path provided. Use: excel-export <path>");
+                return;
             }
+            
+            // Build options array from Picocli parameters
+            List<String> optionList = new ArrayList<>();
+            optionList.add(exportPath.toString());
+            if (language != null) {
+                optionList.add(language);
+            }
+            if (emptyProperties) {
+                optionList.add("1");
+            }
+            String[] options = optionList.toArray(new String[0]);
             
             doExport(options);
             long end = System.currentTimeMillis() - start;

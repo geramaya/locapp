@@ -43,8 +43,9 @@ import picocli.CommandLine.Parameters;
     description = "Iterate known properties and save into directory. Use --delta to export only modified files.",
     mixinStandardHelpOptions = true
 )
-public class ExportPropertiesCommand implements CommandRunnable, Runnable {
+public class ExportPropertiesCommand implements Runnable {
 
+	public static final String EMPTY_VALUE = "";
 	private static final Logger logger = Logger.getLogger(ExportPropertiesCommand.class.getName());
 	private LocalizationDao locFacade = new LocalizationDao();
 	private List<Localization> allLocalizations;
@@ -84,7 +85,8 @@ public class ExportPropertiesCommand implements CommandRunnable, Runnable {
 		if (exportDir != null) {
 			exportPath = exportDir.toString();
 		} else {
-			exportPath = CommandContext.getInstance().nextArgument();
+			logger.warning("No export path provided. Use: export-properties <path>");
+			return;
 		}
 
 		if (StringUtils.isEmpty(exportPath)) {

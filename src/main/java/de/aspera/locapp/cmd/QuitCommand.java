@@ -8,7 +8,7 @@ import picocli.CommandLine.Command;
     description = "Quit the program.",
     mixinStandardHelpOptions = true
 )
-public class QuitCommand implements CommandRunnable, Runnable {
+public class QuitCommand implements Runnable {
 
     @Override
     public void run() {

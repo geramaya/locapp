@@ -43,21 +43,16 @@ public class DeltaExportTest extends BasicFacadeTest {
         exportDir = Files.createTempDirectory("locapp_delta_export");
         
         // Initialize configuration
-        CMDCTX.addArgument("init");
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("init");
         
         // Load generated test files
-        CMDCTX.addArgument("files");
-        CMDCTX.addArgument(testDataDir.toString());
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("files", testDataDir.toString());
         
         // Clear database
-        CMDCTX.addArgument("cl");
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("clear-loc");
         
         // Import properties as SRC v1
-        CMDCTX.addArgument("ip");
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("import-properties");
         
         logger.info("Delta export test setup complete");
     }
@@ -144,17 +139,13 @@ public class DeltaExportTest extends BasicFacadeTest {
         // Step 3: Create XLS from the modified SRC
         // First export full SRC to Excel
         String tempExportPath = tempBasePath.toString();
-        CMDCTX.addArgument("ee");
-        CMDCTX.addArgument(tempExportPath);
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("excel-export", tempExportPath);
         
         File excelFile = findExportedFile(tempExportPath, ".xlsx");
         Assert.assertNotNull("Exported Excel should exist", excelFile);
         
         // Import to create XLS version
-        CMDCTX.addArgument("ei");
-        CMDCTX.addArgument(excelFile.getAbsolutePath());
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("excel-import", excelFile.getAbsolutePath());
         
         // Step 4: Test the DAO method for version differences
         List<Localization> differences = locFacade.getLocalizationDifferences(srcV1, srcV2, Status.SRC);

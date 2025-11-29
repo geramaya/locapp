@@ -106,30 +106,23 @@ public class PropertiesImportExportRoundtripTest extends BasicFacadeTest {
     public void testPropertiesImportExportRoundtrip() throws Exception {
         // Step 1: Initialize configuration
         logger.info("Step 1: Initializing configuration...");
-        CMDCTX.addArgument("init");
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("init");
         
         // Step 2: Scan for properties files
         logger.info("Step 2: Scanning for properties files...");
-        CMDCTX.addArgument("files");
-        CMDCTX.addArgument(testDataDir.toString());
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("files", testDataDir.toString());
         
         // Step 3: Clear database
         logger.info("Step 3: Clearing database...");
-        CMDCTX.addArgument("cl");
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("clear-loc");
         
         // Step 4: Import properties (creates entries with SRC status)
         logger.info("Step 4: Importing properties...");
-        CMDCTX.addArgument("ip");
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("import-properties");
         
         // Step 5: Export to Excel (reads SRC status)
         logger.info("Step 5: Exporting to Excel...");
-        CMDCTX.addArgument("ee");
-        CMDCTX.addArgument(exportDir.toString());
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("excel-export", exportDir.toString());
         
         // Find the exported Excel file
         exportedExcelFile = findExportedFile(exportDir.toString(), "-export-all.xlsx");
@@ -138,9 +131,7 @@ public class PropertiesImportExportRoundtripTest extends BasicFacadeTest {
         
         // Step 6: Import from Excel (creates entries with XLS status)
         logger.info("Step 6: Importing from Excel...");
-        CMDCTX.addArgument("ei");
-        CMDCTX.addArgument(exportedExcelFile.getAbsolutePath());
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("excel-import", exportedExcelFile.getAbsolutePath());
         
         // Verify XLS entries were created
         LocalizationDao locFacade = new LocalizationDao();
@@ -151,9 +142,7 @@ public class PropertiesImportExportRoundtripTest extends BasicFacadeTest {
         
         // Step 7: Export to properties format
         logger.info("Step 7: Exporting to properties format...");
-        CMDCTX.addArgument("ep");
-        CMDCTX.addArgument(exportDir.toString());
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("export-properties", exportDir.toString());
         
         // Step 8: Compare exported properties with original test data
         logger.info("Step 8: Comparing exported properties with original test data...");
@@ -314,30 +303,23 @@ public class PropertiesImportExportRoundtripTest extends BasicFacadeTest {
     public void testExportedPropertiesAreSortedAlphabetically() throws Exception {
         // Step 1: Initialize configuration
         logger.info("Step 1: Initializing configuration...");
-        CMDCTX.addArgument("init");
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("init");
         
         // Step 2: Scan for properties files
         logger.info("Step 2: Scanning for properties files...");
-        CMDCTX.addArgument("files");
-        CMDCTX.addArgument(testDataDir.toString());
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("files", testDataDir.toString());
         
         // Step 3: Clear database
         logger.info("Step 3: Clearing database...");
-        CMDCTX.addArgument("cl");
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("clear-loc");
         
         // Step 4: Import properties (creates entries with SRC status)
         logger.info("Step 4: Importing properties...");
-        CMDCTX.addArgument("ip");
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("import-properties");
         
         // Step 5: Export to Excel (reads SRC status)
         logger.info("Step 5: Exporting to Excel...");
-        CMDCTX.addArgument("ee");
-        CMDCTX.addArgument(exportDir.toString());
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("excel-export", exportDir.toString());
         
         // Find the exported Excel file
         exportedExcelFile = findExportedFile(exportDir.toString(), "-export-all.xlsx");
@@ -345,15 +327,11 @@ public class PropertiesImportExportRoundtripTest extends BasicFacadeTest {
         
         // Step 6: Import from Excel (creates entries with XLS status)
         logger.info("Step 6: Importing from Excel...");
-        CMDCTX.addArgument("ei");
-        CMDCTX.addArgument(exportedExcelFile.getAbsolutePath());
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("excel-import", exportedExcelFile.getAbsolutePath());
         
         // Step 7: Export to properties format
         logger.info("Step 7: Exporting to properties format...");
-        CMDCTX.addArgument("ep");
-        CMDCTX.addArgument(exportDir.toString());
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("export-properties", exportDir.toString());
         
         // Step 8: Verify alphabetical sorting of exported properties
         logger.info("Step 8: Verifying alphabetical sorting of exported properties...");

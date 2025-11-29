@@ -33,7 +33,7 @@ import picocli.CommandLine.Parameters;
     description = "Search for translations by key or value.",
     mixinStandardHelpOptions = true
 )
-public class SearchCommand implements CommandRunnable, Runnable {
+public class SearchCommand implements Runnable {
 
     private static final Logger logger = Logger.getLogger(SearchCommand.class.getName());
     private static final int DEFAULT_PAGE_SIZE = 50;
@@ -85,9 +85,8 @@ public class SearchCommand implements CommandRunnable, Runnable {
                     .build();
             return reader.readLine("Enter search term: ");
         } catch (IOException e) {
-            logger.log(Level.WARNING, "Could not create interactive prompt, falling back to legacy input", e);
-            // Fallback to legacy CommandContext
-            return CommandContext.getInstance().nextArgument();
+            logger.log(Level.WARNING, "Could not create interactive prompt", e);
+            return null;
         }
     }
 

@@ -17,7 +17,7 @@ import picocli.CommandLine.Command;
     description = "Initialize the application with default configuration.",
     mixinStandardHelpOptions = true
 )
-public class ConfigInitCommand implements CommandRunnable, Runnable {
+public class ConfigInitCommand implements Runnable {
 
     private static final Logger LOGGER = Logger.getLogger(ConfigInitCommand.class.getName());
 

@@ -17,7 +17,7 @@ import picocli.CommandLine.Parameters;
     description = "Set default language for excel export (LANG=[en,de...]).",
     mixinStandardHelpOptions = true
 )
-public class SetDefaultLanguageCommand implements CommandRunnable, Runnable {
+public class SetDefaultLanguageCommand implements Runnable {
     private ConfigDao configFacade = new ConfigDao();
     private Logger logger = Logger.getLogger(SetDefaultLanguageCommand.class.getName());
 
@@ -46,7 +46,8 @@ public class SetDefaultLanguageCommand implements CommandRunnable, Runnable {
         if (languageParam != null) {
             selectedLanguage = languageParam;
         } else {
-            selectedLanguage = CommandContext.getInstance().nextArgument();
+            // Use default language if not provided
+            selectedLanguage = ConfigDao.DEFAULT_LANGUAGE.toLowerCase();
         }
         
 		var language = selectedLanguage != null ? selectedLanguage.toLowerCase()

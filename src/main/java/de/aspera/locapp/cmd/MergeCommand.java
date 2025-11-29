@@ -31,7 +31,7 @@ import picocli.CommandLine.Parameters;
     description = "All known properties will be merged with their latest version to a new data set.",
     mixinStandardHelpOptions = true
 )
-public class MergeCommand implements CommandRunnable, Runnable {
+public class MergeCommand implements Runnable {
 
     private static final Logger logger = Logger.getLogger(MergeCommand.class.getName());
     private LocalizationDao locFacade = new LocalizationDao();
@@ -46,7 +46,7 @@ public class MergeCommand implements CommandRunnable, Runnable {
             if (type != null) {
                 mergeProperties(type);
             } else {
-                mergeProperties(CommandContext.getInstance().allArguments());
+                logger.log(Level.WARNING, "No type provided. Use: merge-properties <SRC|XLS>");
             }
         } catch (Exception e) {
             logger.log(Level.SEVERE, e.getMessage(), e);

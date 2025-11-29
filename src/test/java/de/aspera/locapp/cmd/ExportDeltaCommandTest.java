@@ -36,33 +36,21 @@ public class ExportDeltaCommandTest extends BasicFacadeTest {
         String testfiles = ExcelExportCommandTest.class.getClassLoader().getResource("deltatest").getFile();
         String xlsfile = ExcelImportCommandTest.class.getClassLoader().getResource("slc_excel_to_import.xlsx").getFile();
 
-        CMDCTX.addArgument("init");
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
-
-        CMDCTX.addArgument("cl");
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
-
-        CMDCTX.addArgument("files");
-        CMDCTX.addArgument(testfiles);
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
-
-        CMDCTX.addArgument("ip");
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("init");
+        executeCommand("clear-loc");
+        executeCommand("files", testfiles);
+        executeCommand("import-properties");
 
         updateFullPath(xlsfile);
 
-        CMDCTX.addArgument("ei");
-        CMDCTX.addArgument(xlsfile);
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("excel-import", xlsfile);
 
     }
 
     @Ignore
     @Test
     public void exportDelta() throws InstantiationException, IllegalAccessException, IOException, CommandException {
-        CMDCTX.addArgument("ed");
-        CMDCTX.addArgument(TEMP_DIR);
-        CMDCTX.executeCommand(CMDCTX.nextArgument());
+        executeCommand("export-delta", TEMP_DIR);
         logger.info("saved in: " + TEMP_DIR);
 
         Cell cell = getCell(2, 5);

@@ -45,7 +45,8 @@ import picocli.CommandLine.Parameters;
     description = "Import delta and merge with selected version.",
     mixinStandardHelpOptions = true
 )
-public class ImportDeltaCommand implements CommandRunnable, Runnable {
+public class ImportDeltaCommand implements Runnable {
+    public static final String EMPTY_VALUE = "";
     private static final int COL_KEY = 2;
     private static final Logger LOGGER = Logger.getLogger(ExportDeltaCommand.class.getName());
 
@@ -92,8 +93,8 @@ public class ImportDeltaCommand implements CommandRunnable, Runnable {
             importPath = importFile.toString();
             lastVersionStr = version;
         } else {
-            importPath = CommandContext.getInstance().nextArgument();
-            lastVersionStr = CommandContext.getInstance().nextArgument();
+            LOGGER.severe("No import file provided. Use: import-delta <path> [version]");
+            return;
         }
         
         int lastVersion = 0;

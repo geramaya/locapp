@@ -37,7 +37,7 @@ import picocli.CommandLine.Command;
     description = "Iterate known properties and save into database.",
     mixinStandardHelpOptions = true
 )
-public class ImportPropertiesCommand implements CommandRunnable, Runnable {
+public class ImportPropertiesCommand implements Runnable {
 
 	private static final Logger logger = Logger.getLogger(ImportPropertiesCommand.class.getName());
 
