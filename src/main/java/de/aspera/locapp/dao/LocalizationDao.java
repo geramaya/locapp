@@ -344,4 +344,76 @@ public class LocalizationDao extends AbstractDao<Localization> {
 		}
 	}
 
+	/**
+	 * Get localizations from XLS that differ from the corresponding SRC entries.
+	 * Compares the latest XLS version with the previous SRC version to find
+	 * keys where values have been modified.
+	 *
+	 * @param srcVersion the SRC version to compare against
+	 * @param xlsVersion the XLS version to check for modifications
+	 * @return list of localizations from XLS that have different values than SRC
+	 * @throws DatabaseException if database access fails
+	 */
+	public List<Localization> getLocalizationDifferences(int srcVersion, int xlsVersion) throws DatabaseException {
+		List<Localization> differences = new ArrayList<>();
+		
+		if (srcVersion <= 0) {
+			// No previous version found, return all entries from the XLS version
+			List<Localization> allXls = getLocalizations(xlsVersion, Status.XLS, false, null);
+			logger.log(Level.INFO, "No previous version found, returning all {0} entries from version {1}", 
+					new Object[]{allXls.size(), xlsVersion});
+			return allXls;
+		}
+		
+		try {
+			// Get all XLS entries for the given version
+			List<Localization> xlsEntries = getLocalizations(xlsVersion, Status.XLS, false, null);
+			
+			// Get all SRC entries for the previous version
+			List<Localization> srcEntries = getLocalizations(srcVersion, Status.SRC, false, null);
+			
+			// Create a map of SRC entries keyed by locale+key+normalizedPath for fast lookup
+			java.util.Map<String, Localization> srcMap = new java.util.HashMap<>();
+			for (Localization src : srcEntries) {
+				String lookupKey = buildLookupKey(src);
+				srcMap.put(lookupKey, src);
+			}
+			
+			// Find XLS entries that differ from SRC
+			for (Localization xls : xlsEntries) {
+				String lookupKey = buildLookupKey(xls);
+				Localization src = srcMap.get(lookupKey);
+				
+				if (src == null) {
+					// New key in XLS that doesn't exist in SRC
+					differences.add(xls);
+				} else {
+					// Compare values - treat null as empty string
+					String xlsValue = xls.getValue() != null ? xls.getValue() : "";
+					String srcValue = src.getValue() != null ? src.getValue() : "";
+					
+					if (!xlsValue.equals(srcValue)) {
+						differences.add(xls);
+					}
+				}
+			}
+			
+			logger.log(Level.INFO, "Found {0} differences between version {1} and version {2}", 
+					new Object[]{differences.size(), srcVersion, xlsVersion});
+			
+			return fileIgnoring ? filterIgnoredEntries(differences, loc -> loc.getFileName()) : differences;
+		} catch (Exception e) {
+			throw new DatabaseException(e.getMessage(), e);
+		}
+	}
+	
+	/**
+	 * Build a lookup key for comparing localizations across versions.
+	 * Uses locale, key, and normalized full path (removing language suffix for comparison).
+	 */
+	private String buildLookupKey(Localization loc) {
+		String normalizedPath = HelperUtil.removeLanguageFromPath(loc.getFullPath());
+		return loc.getLocale() + "#" + loc.getKey() + "#" + normalizedPath;
+	}
+
 }

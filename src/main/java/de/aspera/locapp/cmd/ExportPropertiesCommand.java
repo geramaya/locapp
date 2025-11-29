@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
@@ -27,6 +28,7 @@ import de.aspera.locapp.dto.Localization.Status;
 import de.aspera.locapp.util.HelperUtil;
 
 import picocli.CommandLine.Command;
+import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
 /**
@@ -38,7 +40,7 @@ import picocli.CommandLine.Parameters;
 @Command(
     name = "export-properties",
     aliases = {"ep"},
-    description = "Iterate known properties and save into directory.",
+    description = "Iterate known properties and save into directory. Use --delta to export only modified files.",
     mixinStandardHelpOptions = true
 )
 public class ExportPropertiesCommand implements CommandRunnable, Runnable {
@@ -49,6 +51,9 @@ public class ExportPropertiesCommand implements CommandRunnable, Runnable {
 
 	@Parameters(index = "0", description = "Export directory path", arity = "0..1")
 	private Path exportDir;
+	
+	@Option(names = {"-d", "--delta"}, description = "Export only files containing keys modified since the previous SRC version.")
+	private boolean delta;
 
 	@Override
 	public void run() {
@@ -64,6 +69,13 @@ public class ExportPropertiesCommand implements CommandRunnable, Runnable {
 	 */
 	public void setExportDir(Path exportDir) {
 		this.exportDir = exportDir;
+	}
+	
+	/**
+	 * Sets the delta flag programmatically for testing.
+	 */
+	public void setDelta(boolean delta) {
+		this.delta = delta;
 	}
 
 	private void exportPropertiesFiles() throws CommandException {
@@ -89,11 +101,23 @@ public class ExportPropertiesCommand implements CommandRunnable, Runnable {
 		InputStream inputStream = null;
 
 		try {
-			allLocalizations = locFacade.getLocalizations(locFacade.lastVersion(Status.XLS), Status.XLS, false, null);
+			int xlsVersion = locFacade.lastVersion(Status.XLS);
+			allLocalizations = locFacade.getLocalizations(xlsVersion, Status.XLS, false, null);
 			Set<String> defaultPathFiles = locFacade.getFiles(Locale.ENGLISH, true);
 			List<String> languages = locFacade.getLanguages(true);
+			
+			// If delta mode, filter to only files with modified keys
+			Set<String> filesToExport = defaultPathFiles;
+			if (delta) {
+				filesToExport = getFilesWithModifiedKeys(xlsVersion);
+				if (filesToExport.isEmpty()) {
+					logger.log(Level.INFO, "Delta export: No files have modified keys. Nothing to export.");
+					return;
+				}
+				logger.log(Level.INFO, "Delta export: {0} files contain modified keys.", filesToExport.size());
+			}
 
-			for (String defaultPathFile : defaultPathFiles) {
+			for (String defaultPathFile : filesToExport) {
 				for (String local : languages) {
 					if (skipPropertyFile(defaultPathFile, languages)) {
 						continue; // skip unnecessary languages and files
@@ -165,6 +189,26 @@ public class ExportPropertiesCommand implements CommandRunnable, Runnable {
 
 		long end = System.currentTimeMillis() - start;
 		logger.log(Level.INFO, "Export properties fileset into a directory [" + exportPath + "] in ms: " + end);
+	}
+	
+	/**
+	 * Get the set of base property files that contain keys modified in the XLS version
+	 * compared to the previous SRC version.
+	 */
+	private Set<String> getFilesWithModifiedKeys(int xlsVersion) throws DatabaseException {
+		int srcVersion = locFacade.lastVersion(Status.SRC);
+		logger.log(Level.INFO, "Delta comparison: SRC v{0} -> XLS v{1}", new Object[]{srcVersion, xlsVersion});
+		
+		List<Localization> differences = locFacade.getLocalizationDifferences(srcVersion, xlsVersion);
+		
+		Set<String> modifiedFiles = new HashSet<>();
+		for (Localization diff : differences) {
+			// Normalize to the base (English) path for consistency
+			String basePath = HelperUtil.removeLanguageFromPath(diff.getFullPath());
+			modifiedFiles.add(basePath);
+		}
+		
+		return modifiedFiles;
 	}
 
 	private boolean skipPropertyFile(String defaultFilePath, List<String> languages) {
