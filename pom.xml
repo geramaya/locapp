@@ -7,7 +7,7 @@
 	<version>2.0.0-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<properties>
-		<jre.compiler.version>17</jre.compiler.version>
+		<jre.compiler.version>21</jre.compiler.version>
 		<picocli.version>4.7.6</picocli.version>
 		<jline.version>3.26.3</jline.version>
 	</properties>
