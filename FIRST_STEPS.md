@@ -61,9 +61,10 @@ INFORMATION: The amount of properties type XLS is 4 [language=null, englishDefau
 #### 2.2. Targeted Export of Empty Values (Final XLS V3)
 
 ```bash
-# 9. Targeted export of *only* empty values (-e)
->> command: ee <TEMP_DIR> -e
-# [...] Excel file exported (only 4 key-value pairs visible for translation).
+# 9. Targeted export of *only* empty values for a specific language (-l <LANG> -e)
+>> command: ee <TEMP_DIR> -l fr -e
+# This will export only the keys where the French translation is still missing (empty). The Excel file will contain only the open gaps for 'fr', making it easier for translators to focus on what needs to be done.
+# [...] Excel file exported (only the empty French key-value pairs visible for translation).
 
 # 10. External Edit (Simulation)
 # The remaining 4 gaps are filled (e.g., foobar2/3 in IT/FR).

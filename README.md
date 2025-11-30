@@ -44,6 +44,17 @@ The typical workflow involves updating the **XLS Matrix** and consolidating the 
 ## Typical Workflow
 1. **Initialize & Scan:** `files <ROOT>` followed by `import-properties` (`ip`). This stores the initial **Sparse Data** set in **SRC** status.
 2. **Export for Translation:** `excel-export <DIR> [LANG] [E]` (`ee`). Creates the **Dense Matrix** in Excel format.
+
+   > **💡 Tip: Export only empty values for a specific language**
+   >
+   > If you want to export only the keys that are missing translations for a specific language (e.g., French), you can combine the `-l` and `-e` flags:
+   >
+   > ```bash
+   > ee <DIR> -l fr -e
+   > ```
+   >
+   > This will generate an Excel file containing only the keys where the French translation is still empty. This is ideal for sending translators just the "open gaps" for their language, instead of the full matrix.
+
 3. **Translator Work:** Translator edits Excel (fill empty cells, adjust values).
 4. **Import & Matrix-Update:** `excel-import <DIR>` (`ei`). Updates the **Dense Matrix** in **XLS** status.
 5. **Integrity Check:** `check-integrity [LANG]` (`ci`). Verifies the coverage of all Source keys in the XLS matrix.
