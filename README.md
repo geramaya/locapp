@@ -48,6 +48,19 @@ The typical workflow involves updating the **XLS Matrix** and consolidating the 
 4. **Import & Matrix-Update:** `excel-import <DIR>` (`ei`). Updates the **Dense Matrix** in **XLS** status.
 5. **Integrity Check:** `check-integrity [LANG]` (`ci`). Verifies the coverage of all Source keys in the XLS matrix.
 6. **Promotion to Source Baseline:** After successful check, perform the steps **`ep` $\rightarrow$ Filesystem Update $\rightarrow$ `ip` (new SRC Baseline)**.
+
+   > **💡 Tip: Delta Export (`ep -d` / `--delta`)**
+   >
+   > If you only want to export property files that have changed (instead of always exporting all), use `ep -d <DIR>`. This saves time and avoids unnecessary file changes—especially in large projects or CI/CD workflows. The tool automatically detects which files have changed since the last SRC baseline import and exports only those.
+   >
+   > **Example:**
+   > ```bash
+   > # Export only changed files
+   > ep -d <PROJECT_ROOT>
+   > ```
+   >
+   > Without `-d`, all files are always exported; with `-d`, only the actually changed ones are exported.
+
 7. **Consolidation:** `merge-properties SRC|XLS` (`mp`). Consolidates the latest version of SRC or XLS.
 8. Optional: `csv-import` / `cscmig` and Housekeeping (`iil`, `cil`, `cl`).
 
