@@ -348,11 +348,14 @@ public class LocalizationDao extends AbstractDao<Localization> {
 
 	/**
 	 * Builds a unique map key for a localization entry combining base fileName (without language suffix), key, and locale.
-	 * Using the base fileName ensures that SRC and XLS entries match correctly regardless of how the filename
-	 * stores the language suffix.
+	 * 
+	 * Using the base fileName is necessary because SRC entries may have fileName like "test_de.properties"
+	 * (from the actual file on disk), while XLS entries from the same logical file may have "test.properties"
+	 * (the base name from the Excel Filename column). By normalizing to the base fileName, we ensure
+	 * entries for the same key+locale combination are correctly matched regardless of how they store
+	 * the language suffix in the fileName field.
 	 */
 	private String buildLocalizationMapKey(Localization loc) {
-		// Use base fileName without language suffix for consistent matching between SRC and XLS
 		String baseFileName = HelperUtil.removeLanguageFromPath(loc.getFileName());
 		return baseFileName + "|" + loc.getKey() + "|" + loc.getLocale();
 	}
