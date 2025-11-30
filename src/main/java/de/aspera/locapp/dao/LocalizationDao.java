@@ -347,6 +347,13 @@ public class LocalizationDao extends AbstractDao<Localization> {
 	}
 
 	/**
+	 * Builds a unique map key for a localization entry combining fileName, key, and locale.
+	 */
+	private String buildLocalizationMapKey(Localization loc) {
+		return loc.getFileName() + "|" + loc.getKey() + "|" + loc.getLocale();
+	}
+
+	/**
 	 * Returns localizations from version2 that have different values compared to the same
 	 * key/locale/filename entry in version1. This is used for delta exports to identify
 	 * which files have actually changed between versions.
@@ -381,15 +388,13 @@ public class LocalizationDao extends AbstractDao<Localization> {
 			// Create a lookup map for version1 entries (key: fileName|key|locale -> value)
 			Map<String, String> version1Map = new HashMap<>();
 			for (Localization loc : version1Locs) {
-				String mapKey = loc.getFileName() + "|" + loc.getKey() + "|" + loc.getLocale();
-				version1Map.put(mapKey, loc.getValue() != null ? loc.getValue() : "");
+				version1Map.put(buildLocalizationMapKey(loc), loc.getValue() != null ? loc.getValue() : "");
 			}
 			
 			// Find differences: entries in version2 that don't exist in version1 OR have different values
 			List<Localization> differences = new ArrayList<>();
 			for (Localization loc : version2Locs) {
-				String mapKey = loc.getFileName() + "|" + loc.getKey() + "|" + loc.getLocale();
-				String v1Value = version1Map.get(mapKey);
+				String v1Value = version1Map.get(buildLocalizationMapKey(loc));
 				String v2Value = loc.getValue() != null ? loc.getValue() : "";
 				
 				// Include if: not in v1, or value is different
@@ -437,15 +442,13 @@ public class LocalizationDao extends AbstractDao<Localization> {
 			// Create a lookup map for SRC entries (key: fileName|key|locale -> value)
 			Map<String, String> srcMap = new HashMap<>();
 			for (Localization loc : srcLocs) {
-				String mapKey = loc.getFileName() + "|" + loc.getKey() + "|" + loc.getLocale();
-				srcMap.put(mapKey, loc.getValue() != null ? loc.getValue() : "");
+				srcMap.put(buildLocalizationMapKey(loc), loc.getValue() != null ? loc.getValue() : "");
 			}
 			
 			// Find differences: XLS entries that don't exist in SRC OR have different values
 			List<Localization> differences = new ArrayList<>();
 			for (Localization loc : xlsLocs) {
-				String mapKey = loc.getFileName() + "|" + loc.getKey() + "|" + loc.getLocale();
-				String srcValue = srcMap.get(mapKey);
+				String srcValue = srcMap.get(buildLocalizationMapKey(loc));
 				String xlsValue = loc.getValue() != null ? loc.getValue() : "";
 				
 				// Include if: not in SRC, or value is different

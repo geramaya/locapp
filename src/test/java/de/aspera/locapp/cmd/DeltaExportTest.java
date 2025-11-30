@@ -124,7 +124,7 @@ public class DeltaExportTest extends BasicFacadeTest {
             
             // Modify the value of the target key
             if (loc.getKey().equals(modifiedKey) && loc.getFullPath().equals(modifiedFile)) {
-                newLoc.setValue("DELTA_MODIFIED_VALUE_" + System.currentTimeMillis());
+                newLoc.setValue("DELTA_MODIFIED_VALUE_FOR_TEST");
             } else {
                 newLoc.setValue(loc.getValue());
             }
@@ -234,7 +234,7 @@ public class DeltaExportTest extends BasicFacadeTest {
             if (loc.getKey().equals(modifiedKey) && 
                 loc.getLocale().equals(targetLoc.getLocale()) && 
                 loc.getFullPath().equals(modifiedFilePath)) {
-                newLoc.setValue("MODIFIED_VALUE_" + System.currentTimeMillis());
+                newLoc.setValue("MODIFIED_VALUE_FOR_DELTA_TEST");
                 logger.info("Modified value for key: " + modifiedKey + " in file: " + modifiedFilePath);
             } else {
                 newLoc.setValue(loc.getValue());
@@ -261,8 +261,8 @@ public class DeltaExportTest extends BasicFacadeTest {
         }
         
         Assert.assertNotNull("Should find our modified entry in the differences", modifiedDiff);
-        Assert.assertTrue("Modified entry should have our modified value", 
-                         modifiedDiff.getValue().startsWith("MODIFIED_VALUE_"));
+        Assert.assertEquals("Modified entry should have our modified value", 
+                         "MODIFIED_VALUE_FOR_DELTA_TEST", modifiedDiff.getValue());
         
         // Step 6: Verify the full path is preserved in differences (this is the key fix)
         java.util.Set<String> modifiedFiles = new java.util.HashSet<>();
