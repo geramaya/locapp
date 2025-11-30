@@ -5,7 +5,7 @@ This scenario demonstrates the intended **Sparse Data (SRC) to Dense Matrix (XLS
 
 The full, verified command sequence is: `cl, f, ip, ee, <External Edit>, ei, ep, ip, ci`.
 
-### 1\. Initial State & Setup
+### 1. Initial State & Setup
 
 The project initially contains **sparse** `.properties` files. The goal is to promote the localized content to a new, dense **Source Baseline**.
 
@@ -33,7 +33,7 @@ INFORMATION: The amount of properties type SRC is 10 [language=null, englishDefa
 
 -----
 
-### 2\. Translation & Matrix Completion (XLS V3)
+### 2. Translation & Matrix Completion (XLS V3)
 
 The `ee` command creates the 16-entry dense matrix, which the translator completes in two fictional rounds (V2 & V3).
 
@@ -61,9 +61,10 @@ INFORMATION: The amount of properties type XLS is 4 [language=null, englishDefau
 #### 2.2. Targeted Export of Empty Values (Final XLS V3)
 
 ```bash
-# 9. Targeted export of *only* empty values (-e)
->> command: ee <TEMP_DIR> -e
-# [...] Excel file exported (only 4 key-value pairs visible for translation).
+# 9. Targeted export of *only* empty values for a specific language (-l <LANG> -e)
+>> command: ee <TEMP_DIR> -l fr -e
+# This will export only the keys where the French translation is still missing (empty). The Excel file will contain only the open gaps for 'fr', making it easier for translators to focus on what needs to be done.
+# [...] Excel file exported (only the empty French key-value pairs visible for translation).
 
 # 10. External Edit (Simulation)
 # The remaining 4 gaps are filled (e.g., foobar2/3 in IT/FR).
@@ -79,7 +80,7 @@ INFORMATION: The amount of properties type XLS is 0 [language=null, englishDefau
 
 -----
 
-### 3\. Promotion to Source Baseline & Final SUCCESS
+### 3. Promotion to Source Baseline & Final SUCCESS
 
 The complete **XLS V3** matrix is promoted back to the Source structure, ensuring future consistency.
 
@@ -88,6 +89,12 @@ The complete **XLS V3** matrix is promoted back to the Source structure, ensurin
 # This step writes the 16 fully translated entries back to the physical .properties files.
 >> command: ep <PROJECT_ROOT>
 INFORMATION: Export properties fileset into a directory [<PROJECT_ROOT>] in ms: [...]
+
+# Optional: Delta Export (only changed files)
+# If you only want to export files that have changed since the last SRC baseline import, use:
+>> command: ep -d <PROJECT_ROOT>
+INFORMATION: Delta export: Only files with modified keys are exported.
+# This saves time and avoids unnecessary file changes—especially in large projects or CI/CD workflows.
 
 # 14. Re-Import Source (ip)
 # The tool now reads 16 entries from the physical files, creating the new DENSE SRC V3.
@@ -123,3 +130,16 @@ INFORMATION: SUCCESS: LANGUAGE[it] The amount of src(4) vs xls(4) is equal. All 
 
 *** SUCCESS! The localization properties are complete! ***
 ```
+
+---
+
+**💡 Tip: Delta Export (`ep -d` / `--delta`)**
+
+If you only want to export property files that have changed (instead of always exporting all), use `ep -d <DIR>`. This saves time and avoids unnecessary file changes—especially in large projects or CI/CD workflows. The tool automatically detects which files have changed since the last SRC baseline import and exports only those.
+
+**Example:**
+```bash
+# Export only changed files
+ep -d <PROJECT_ROOT>
+```
+Without `-d`, all files are always exported; with `-d`, only the actually changed ones are exported.

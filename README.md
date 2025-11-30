@@ -44,10 +44,34 @@ The typical workflow involves updating the **XLS Matrix** and consolidating the 
 ## Typical Workflow
 1. **Initialize & Scan:** `files <ROOT>` followed by `import-properties` (`ip`). This stores the initial **Sparse Data** set in **SRC** status.
 2. **Export for Translation:** `excel-export <DIR> [LANG] [E]` (`ee`). Creates the **Dense Matrix** in Excel format.
+
+   > **💡 Tip: Export only empty values for a specific language**
+   >
+   > If you want to export only the keys that are missing translations for a specific language (e.g., French), you can combine the `-l` and `-e` flags:
+   >
+   > ```bash
+   > ee <DIR> -l fr -e
+   > ```
+   >
+   > This will generate an Excel file containing only the keys where the French translation is still empty. This is ideal for sending translators just the "open gaps" for their language, instead of the full matrix.
+
 3. **Translator Work:** Translator edits Excel (fill empty cells, adjust values).
 4. **Import & Matrix-Update:** `excel-import <DIR>` (`ei`). Updates the **Dense Matrix** in **XLS** status.
 5. **Integrity Check:** `check-integrity [LANG]` (`ci`). Verifies the coverage of all Source keys in the XLS matrix.
 6. **Promotion to Source Baseline:** After successful check, perform the steps **`ep` $\rightarrow$ Filesystem Update $\rightarrow$ `ip` (new SRC Baseline)**.
+
+   > **💡 Tip: Delta Export (`ep -d` / `--delta`)**
+   >
+   > If you only want to export property files that have changed (instead of always exporting all), use `ep -d <DIR>`. This saves time and avoids unnecessary file changes—especially in large projects or CI/CD workflows. The tool automatically detects which files have changed since the last SRC baseline import and exports only those.
+   >
+   > **Example:**
+   > ```bash
+   > # Export only changed files
+   > ep -d <PROJECT_ROOT>
+   > ```
+   >
+   > Without `-d`, all files are always exported; with `-d`, only the actually changed ones are exported.
+
 7. **Consolidation:** `merge-properties SRC|XLS` (`mp`). Consolidates the latest version of SRC or XLS.
 8. Optional: `csv-import` / `cscmig` and Housekeeping (`iil`, `cil`, `cl`).
 

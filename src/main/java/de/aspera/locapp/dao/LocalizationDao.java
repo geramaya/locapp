@@ -347,6 +347,20 @@ public class LocalizationDao extends AbstractDao<Localization> {
 	}
 
 	/**
+	 * Builds a unique map key for a localization entry combining base fileName (without language suffix), key, and locale.
+	 * 
+	 * Using the base fileName is necessary because SRC entries may have fileName like "test_de.properties"
+	 * (from the actual file on disk), while XLS entries from the same logical file may have "test.properties"
+	 * (the base name from the Excel Filename column). By normalizing to the base fileName, we ensure
+	 * entries for the same key+locale combination are correctly matched regardless of how they store
+	 * the language suffix in the fileName field.
+	 */
+	private String buildLocalizationMapKey(Localization loc) {
+		String baseFileName = HelperUtil.removeLanguageFromPath(loc.getFileName());
+		return baseFileName + "|" + loc.getKey() + "|" + loc.getLocale();
+	}
+
+	/**
 	 * Returns localizations from version2 that have different values compared to the same
 	 * key/locale/filename entry in version1. This is used for delta exports to identify
 	 * which files have actually changed between versions.
@@ -381,15 +395,13 @@ public class LocalizationDao extends AbstractDao<Localization> {
 			// Create a lookup map for version1 entries (key: fileName|key|locale -> value)
 			Map<String, String> version1Map = new HashMap<>();
 			for (Localization loc : version1Locs) {
-				String mapKey = loc.getFileName() + "|" + loc.getKey() + "|" + loc.getLocale();
-				version1Map.put(mapKey, loc.getValue() != null ? loc.getValue() : "");
+				version1Map.put(buildLocalizationMapKey(loc), loc.getValue() != null ? loc.getValue() : "");
 			}
 			
 			// Find differences: entries in version2 that don't exist in version1 OR have different values
 			List<Localization> differences = new ArrayList<>();
 			for (Localization loc : version2Locs) {
-				String mapKey = loc.getFileName() + "|" + loc.getKey() + "|" + loc.getLocale();
-				String v1Value = version1Map.get(mapKey);
+				String v1Value = version1Map.get(buildLocalizationMapKey(loc));
 				String v2Value = loc.getValue() != null ? loc.getValue() : "";
 				
 				// Include if: not in v1, or value is different
@@ -399,6 +411,67 @@ public class LocalizationDao extends AbstractDao<Localization> {
 			}
 			
 			logger.log(Level.INFO, "Found " + differences.size() + " differences between version " + version1 + " and version " + version2);
+			return differences;
+		} catch (Exception e) {
+			throw new DatabaseException(e.getMessage(), e);
+		}
+	}
+
+	/**
+	 * Compares XLS entries with SRC entries to find differences.
+	 * Returns localizations from XLS that have different values compared to SRC.
+	 * This is used for delta exports to identify which files have actually changed.
+	 *
+	 * @param srcVersion The SRC version to compare from
+	 * @param xlsVersion The XLS version to compare to
+	 * @return List of localizations from XLS that differ from SRC
+	 * @throws DatabaseException if database access fails
+	 */
+	public List<Localization> getXlsToSrcDifferences(int srcVersion, int xlsVersion) throws DatabaseException {
+		try {
+			// Get all localizations from XLS version
+			List<Localization> xlsLocs = getLocalizations(xlsVersion, Status.XLS, false, null);
+			
+			// If srcVersion is 0 or doesn't exist, return all XLS entries
+			if (srcVersion <= 0) {
+				logger.log(Level.INFO, "No SRC version found, returning all " + xlsLocs.size() + " XLS entries");
+				return xlsLocs;
+			}
+			
+			// Get all localizations from SRC version
+			List<Localization> srcLocs = getLocalizations(srcVersion, Status.SRC, false, null);
+			
+			if (srcLocs.isEmpty()) {
+				logger.log(Level.INFO, "SRC version " + srcVersion + " is empty, returning all " + xlsLocs.size() + " XLS entries");
+				return xlsLocs;
+			}
+			
+			// Create a lookup map for SRC entries (key: fileName|key|locale -> value)
+			Map<String, String> srcMap = new HashMap<>();
+			for (Localization loc : srcLocs) {
+				srcMap.put(buildLocalizationMapKey(loc), loc.getValue() != null ? loc.getValue() : "");
+			}
+			
+			// Find differences: XLS entries that have actually changed values
+			// (ignore entries that don't exist in SRC with empty XLS values - these are just Excel placeholders)
+			List<Localization> differences = new ArrayList<>();
+			for (Localization loc : xlsLocs) {
+				String srcValue = srcMap.get(buildLocalizationMapKey(loc));
+				String xlsValue = loc.getValue() != null ? loc.getValue() : "";
+				
+				if (srcValue == null) {
+					// Entry doesn't exist in SRC - only count as difference if XLS has a non-empty value
+					// (i.e., user actually added a new translation)
+					if (!xlsValue.isEmpty()) {
+						differences.add(loc);
+					}
+				} else if (!srcValue.equals(xlsValue)) {
+					// Entry exists in both - include if values are different
+					differences.add(loc);
+				}
+			}
+			
+			logger.log(Level.INFO, "Found " + differences.size() + " differences between SRC v" + srcVersion + " and XLS v" + xlsVersion);
 			return differences;
 		} catch (Exception e) {
 			throw new DatabaseException(e.getMessage(), e);

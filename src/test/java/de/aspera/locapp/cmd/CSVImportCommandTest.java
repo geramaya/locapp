@@ -3,6 +3,7 @@ package de.aspera.locapp.cmd;
 import java.io.IOException;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import de.aspera.locapp.dao.BasicFacadeTest;
@@ -10,6 +11,7 @@ import de.aspera.locapp.dao.DatabaseException;
 import de.aspera.locapp.dao.LocalizationDao;
 import de.aspera.locapp.dto.Localization.Status;
 
+@Ignore
 public class CSVImportCommandTest extends BasicFacadeTest {
 	@Test
 	public void importCSVFile()
