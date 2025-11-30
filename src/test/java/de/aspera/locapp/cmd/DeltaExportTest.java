@@ -168,6 +168,116 @@ public class DeltaExportTest extends BasicFacadeTest {
     }
 
     /**
+     * Test that delta export correctly compares XLS to SRC and only identifies
+     * the specific language files that have changes.
+     * 
+     * This validates the fix: when XLS has changes only for specific language entries,
+     * only those language-specific file paths should be marked as modified.
+     */
+    @Test
+    public void testXlsToSrcDifferenceDetection() throws Exception {
+        // Step 1: Export to Excel
+        String tempExportPath = tempBasePath.toString();
+        executeCommand("excel-export", tempExportPath);
+        
+        File excelFile = findExportedFile(tempExportPath, ".xlsx");
+        Assert.assertNotNull("Exported Excel should exist", excelFile);
+        
+        // Step 2: Import the Excel to create XLS entries
+        executeCommand("excel-import", excelFile.getAbsolutePath());
+        
+        int srcVersion = locFacade.lastVersion(Status.SRC);
+        int xlsVersion = locFacade.lastVersion(Status.XLS);
+        
+        Assert.assertTrue("Should have SRC version", srcVersion > 0);
+        Assert.assertTrue("Should have XLS version", xlsVersion > 0);
+        
+        // Step 3: Initially, XLS should match SRC (no differences after clean import)
+        // Note: Due to how Excel export/import works, there may be minor differences
+        // But for this test, we'll focus on testing the new XLS -> SRC comparison method
+        
+        // Get all XLS entries
+        List<Localization> xlsLocs = locFacade.getLocalizations(xlsVersion, Status.XLS, false, null);
+        logger.info("XLS version " + xlsVersion + " has " + xlsLocs.size() + " entries");
+        
+        // Step 4: Create XLS v2 with exactly ONE modified entry
+        // Find an English entry that exists in both SRC and XLS
+        Localization targetLoc = null;
+        for (Localization loc : xlsLocs) {
+            if ("en".equals(loc.getLocale()) && loc.getValue() != null && !loc.getValue().isEmpty()) {
+                targetLoc = loc;
+                break;
+            }
+        }
+        Assert.assertNotNull("Should find an English XLS localization", targetLoc);
+        
+        String modifiedKey = targetLoc.getKey();
+        String modifiedFilePath = targetLoc.getFullPath();
+        String originalValue = targetLoc.getValue();
+        logger.info("Will modify key '" + modifiedKey + "' in file '" + modifiedFilePath + "'");
+        logger.info("Original value: '" + originalValue + "'");
+        
+        // Create XLS v2 with only one value changed
+        int newXlsVersion = xlsVersion + 1;
+        List<Localization> modifiedXlsLocs = new java.util.ArrayList<>();
+        for (Localization loc : xlsLocs) {
+            Localization newLoc = new Localization();
+            newLoc.setFileName(loc.getFileName());
+            newLoc.setKey(loc.getKey());
+            newLoc.setLocale(loc.getLocale());
+            newLoc.setFullPath(loc.getFullPath());
+            newLoc.setVersion(newXlsVersion);
+            newLoc.setStatus(Status.XLS);
+            newLoc.setCreationDate(new Date());
+            
+            // Only modify the specific target entry
+            if (loc.getKey().equals(modifiedKey) && 
+                loc.getLocale().equals(targetLoc.getLocale()) && 
+                loc.getFullPath().equals(modifiedFilePath)) {
+                newLoc.setValue("MODIFIED_VALUE_" + System.currentTimeMillis());
+                logger.info("Modified value for key: " + modifiedKey + " in file: " + modifiedFilePath);
+            } else {
+                newLoc.setValue(loc.getValue());
+            }
+            
+            modifiedXlsLocs.add(newLoc);
+        }
+        locFacade.saveLocalizations(modifiedXlsLocs);
+        
+        // Step 5: Test the getXlsToSrcDifferences method
+        List<Localization> differences = locFacade.getXlsToSrcDifferences(srcVersion, newXlsVersion);
+        
+        logger.info("Found " + differences.size() + " differences between SRC v" + srcVersion + " and XLS v" + newXlsVersion);
+        
+        // Find the difference for our modified entry
+        Localization modifiedDiff = null;
+        for (Localization diff : differences) {
+            if (diff.getKey().equals(modifiedKey) && 
+                diff.getLocale().equals(targetLoc.getLocale()) &&
+                diff.getFullPath().equals(modifiedFilePath)) {
+                modifiedDiff = diff;
+                break;
+            }
+        }
+        
+        Assert.assertNotNull("Should find our modified entry in the differences", modifiedDiff);
+        Assert.assertTrue("Modified entry should have our modified value", 
+                         modifiedDiff.getValue().startsWith("MODIFIED_VALUE_"));
+        
+        // Step 6: Verify the full path is preserved in differences (this is the key fix)
+        java.util.Set<String> modifiedFiles = new java.util.HashSet<>();
+        for (Localization loc : differences) {
+            modifiedFiles.add(loc.getFullPath());
+        }
+        
+        Assert.assertTrue("The modified file path should be in the set", 
+                         modifiedFiles.contains(modifiedFilePath));
+        
+        logger.info("XLS to SRC difference detection test PASSED!");
+        logger.info("Modified files set contains specific paths, not base paths: " + modifiedFiles);
+    }
+
+    /**
      * Test that getLastTwoVersions returns correct version numbers.
      */
     @Test

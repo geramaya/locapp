@@ -406,6 +406,62 @@ public class LocalizationDao extends AbstractDao<Localization> {
 	}
 
 	/**
+	 * Compares XLS entries with SRC entries to find differences.
+	 * Returns localizations from XLS that have different values compared to SRC.
+	 * This is used for delta exports to identify which files have actually changed.
+	 *
+	 * @param srcVersion The SRC version to compare from
+	 * @param xlsVersion The XLS version to compare to
+	 * @return List of localizations from XLS that differ from SRC
+	 * @throws DatabaseException if database access fails
+	 */
+	public List<Localization> getXlsToSrcDifferences(int srcVersion, int xlsVersion) throws DatabaseException {
+		try {
+			// Get all localizations from XLS version
+			List<Localization> xlsLocs = getLocalizations(xlsVersion, Status.XLS, false, null);
+			
+			// If srcVersion is 0 or doesn't exist, return all XLS entries
+			if (srcVersion <= 0) {
+				logger.log(Level.INFO, "No SRC version found, returning all " + xlsLocs.size() + " XLS entries");
+				return xlsLocs;
+			}
+			
+			// Get all localizations from SRC version
+			List<Localization> srcLocs = getLocalizations(srcVersion, Status.SRC, false, null);
+			
+			if (srcLocs.isEmpty()) {
+				logger.log(Level.INFO, "SRC version " + srcVersion + " is empty, returning all " + xlsLocs.size() + " XLS entries");
+				return xlsLocs;
+			}
+			
+			// Create a lookup map for SRC entries (key: fileName|key|locale -> value)
+			Map<String, String> srcMap = new HashMap<>();
+			for (Localization loc : srcLocs) {
+				String mapKey = loc.getFileName() + "|" + loc.getKey() + "|" + loc.getLocale();
+				srcMap.put(mapKey, loc.getValue() != null ? loc.getValue() : "");
+			}
+			
+			// Find differences: XLS entries that don't exist in SRC OR have different values
+			List<Localization> differences = new ArrayList<>();
+			for (Localization loc : xlsLocs) {
+				String mapKey = loc.getFileName() + "|" + loc.getKey() + "|" + loc.getLocale();
+				String srcValue = srcMap.get(mapKey);
+				String xlsValue = loc.getValue() != null ? loc.getValue() : "";
+				
+				// Include if: not in SRC, or value is different
+				if (srcValue == null || !srcValue.equals(xlsValue)) {
+					differences.add(loc);
+				}
+			}
+			
+			logger.log(Level.INFO, "Found " + differences.size() + " differences between SRC v" + srcVersion + " and XLS v" + xlsVersion);
+			return differences;
+		} catch (Exception e) {
+			throw new DatabaseException(e.getMessage(), e);
+		}
+	}
+
+	/**
 	 * Returns the two most recent versions for a given status.
 	 * 
 	 * @param status The status to query

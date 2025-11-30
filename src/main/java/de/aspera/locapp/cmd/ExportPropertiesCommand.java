@@ -126,8 +126,8 @@ public class ExportPropertiesCommand implements Runnable {
 					}
 					String replacedFile = replaceFilePathWithLocale(defaultPathFile, local);
 
-					// Delta export: skip files that don't contain modified keys
-					if (deltaExport && !modifiedFiles.contains(HelperUtil.removeLanguageFromPath(replacedFile))) {
+					// Delta export: skip files that were not modified in XLS compared to SRC
+					if (deltaExport && !modifiedFiles.contains(replacedFile)) {
 						continue;
 					}
 
@@ -226,28 +226,27 @@ public class ExportPropertiesCommand implements Runnable {
 	}
 
 	/**
-	 * Gets the set of files that contain modified keys between the last two SRC versions.
-	 * Returns the base file paths (without language suffixes).
+	 * Gets the set of files that have been modified in XLS compared to SRC.
+	 * Returns the full file paths (with language suffixes) so that only the specific
+	 * language-variant files that were actually modified will be exported.
 	 */
 	private Set<String> getFilesWithModifiedKeys() throws DatabaseException {
-		int[] versions = locFacade.getLastTwoVersions(Status.SRC);
-		int latestVersion = versions[0];
-		int previousVersion = versions[1];
+		int srcVersion = locFacade.lastVersion(Status.SRC);
+		int xlsVersion = locFacade.lastVersion(Status.XLS);
 		
-		if (latestVersion == 0) {
-			logger.warning("No SRC versions found for delta comparison.");
+		if (xlsVersion == 0) {
+			logger.warning("No XLS version found for delta comparison.");
 			return new HashSet<>();
 		}
 		
-		logger.info("Delta comparison: SRC v" + previousVersion + " -> SRC v" + latestVersion);
+		logger.info("Delta comparison: SRC v" + srcVersion + " -> XLS v" + xlsVersion);
 		
-		List<Localization> differences = locFacade.getLocalizationDifferences(previousVersion, latestVersion, Status.SRC);
+		List<Localization> differences = locFacade.getXlsToSrcDifferences(srcVersion, xlsVersion);
 		
-		// Collect unique base file paths (without language suffix)
+		// Collect the full file paths (with language suffix) of modified files
 		Set<String> modifiedFiles = new HashSet<>();
 		for (Localization loc : differences) {
-			String basePath = HelperUtil.removeLanguageFromPath(loc.getFullPath());
-			modifiedFiles.add(basePath);
+			modifiedFiles.add(loc.getFullPath());
 		}
 		
 		return modifiedFiles;
