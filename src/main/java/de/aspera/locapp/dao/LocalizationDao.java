@@ -347,10 +347,14 @@ public class LocalizationDao extends AbstractDao<Localization> {
 	}
 
 	/**
-	 * Builds a unique map key for a localization entry combining fileName, key, and locale.
+	 * Builds a unique map key for a localization entry combining base fileName (without language suffix), key, and locale.
+	 * Using the base fileName ensures that SRC and XLS entries match correctly regardless of how the filename
+	 * stores the language suffix.
 	 */
 	private String buildLocalizationMapKey(Localization loc) {
-		return loc.getFileName() + "|" + loc.getKey() + "|" + loc.getLocale();
+		// Use base fileName without language suffix for consistent matching between SRC and XLS
+		String baseFileName = HelperUtil.removeLanguageFromPath(loc.getFileName());
+		return baseFileName + "|" + loc.getKey() + "|" + loc.getLocale();
 	}
 
 	/**
@@ -445,14 +449,21 @@ public class LocalizationDao extends AbstractDao<Localization> {
 				srcMap.put(buildLocalizationMapKey(loc), loc.getValue() != null ? loc.getValue() : "");
 			}
 			
-			// Find differences: XLS entries that don't exist in SRC OR have different values
+			// Find differences: XLS entries that have actually changed values
+			// (ignore entries that don't exist in SRC with empty XLS values - these are just Excel placeholders)
 			List<Localization> differences = new ArrayList<>();
 			for (Localization loc : xlsLocs) {
 				String srcValue = srcMap.get(buildLocalizationMapKey(loc));
 				String xlsValue = loc.getValue() != null ? loc.getValue() : "";
 				
-				// Include if: not in SRC, or value is different
-				if (srcValue == null || !srcValue.equals(xlsValue)) {
+				if (srcValue == null) {
+					// Entry doesn't exist in SRC - only count as difference if XLS has a non-empty value
+					// (i.e., user actually added a new translation)
+					if (!xlsValue.isEmpty()) {
+						differences.add(loc);
+					}
+				} else if (!srcValue.equals(xlsValue)) {
+					// Entry exists in both - include if values are different
 					differences.add(loc);
 				}
 			}
